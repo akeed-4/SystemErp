@@ -1,0 +1,6 @@
+{
+  "name": "نظام ERP المحاسبي المتكامل",
+  "description": "نظام ERP محاسبي متعدد المستأجرين مع شاشات مبيعات، مشتريات، مخزون وأسعار التكلفة، سندات قبض وصرف، شجرة حسابات، تقارير مالية، وربط تجريبي مع منصة هيئة الزكاة والضريبة (ZATCA).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

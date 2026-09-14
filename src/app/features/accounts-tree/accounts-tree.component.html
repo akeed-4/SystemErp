@@ -1,0 +1,360 @@
+<div class="space-y-6">
+  <!-- Header Bar -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+    <div>
+      <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+        <mat-icon class="text-indigo-600">account_tree</mat-icon>
+        <span>دليل وشجرة الحسابات المحاسبية ودفتر الأستاذ العام</span>
+      </h2>
+      <p class="text-xs text-slate-500 mt-1">
+        هيكل مالي شجري تفاعلي متعدد المستويات مطابق للمعايير المحاسبية المعتمدة، وسجل القيود اليومية المزدوجة.
+      </p>
+    </div>
+
+    <!-- Switch View Buttons -->
+    <div class="flex items-center gap-2">
+      <button
+        id="tab-tree-view"
+        type="button"
+        (click)="activeTab.set('tree')"
+        [class.bg-indigo-600]="activeTab() === 'tree'"
+        [class.text-white]="activeTab() === 'tree'"
+        [class.bg-white]="activeTab() !== 'tree'"
+        [class.text-slate-700]="activeTab() !== 'tree'"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
+      >
+        <mat-icon class="text-xs">account_tree</mat-icon>
+        <span>شجرة الحسابات (Tree View)</span>
+      </button>
+
+      <button
+        id="tab-journal-view"
+        type="button"
+        (click)="activeTab.set('journal_entries')"
+        [class.bg-indigo-600]="activeTab() === 'journal_entries'"
+        [class.text-white]="activeTab() === 'journal_entries'"
+        [class.bg-white]="activeTab() !== 'journal_entries'"
+        [class.text-slate-700]="activeTab() !== 'journal_entries'"
+        class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
+      >
+        <mat-icon class="text-xs">book</mat-icon>
+        <span>دفتر القيود اليومية (Journal Entries)</span>
+      </button>
+
+      <button
+        id="btn-open-add-acc-modal"
+        type="button"
+        (click)="openAddAccountModal()"
+        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+      >
+        <mat-icon class="text-xs">add</mat-icon>
+        <span>إضافة حساب فرعي</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab 1: Interactive Hierarchy Tree & Search Table -->
+  @if (activeTab() === 'tree') {
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-bold text-slate-800">الدليل المحاسبي الشجري:</span>
+          <span class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-mono font-bold border border-indigo-200">
+            {{ accounts().length }} حساب محاسبي
+          </span>
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              (click)="expandAll()"
+              class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium cursor-pointer"
+            >
+              توسيع الكل
+            </button>
+            <button
+              type="button"
+              (click)="collapseAll()"
+              class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium cursor-pointer"
+            >
+              طي الكل
+            </button>
+          </div>
+        </div>
+
+        <div class="w-full sm:w-72">
+          <div class="relative">
+            <mat-icon class="absolute right-2.5 top-2 text-slate-400 text-sm">search</mat-icon>
+            <input
+              type="text"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
+              placeholder="بحث في الحسابات (رمز، اسم)..."
+              class="w-full bg-slate-50 border border-slate-200 rounded-lg pr-8 pl-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Responsive Multi-level Tree Table -->
+      <div class="overflow-x-auto border border-slate-200 rounded-xl">
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+            <tr>
+              <th class="px-4 py-3 min-w-[240px]">رمز واسم الحساب المحاسبي</th>
+              <th class="px-3 py-3 min-w-[180px]">Account Name (EN)</th>
+              <th class="px-3 py-3 min-w-[130px]">التصنيف المالي</th>
+              <th class="px-3 py-3 min-w-[110px]">طبيعة الحساب</th>
+              <th class="px-3 py-3 text-left min-w-[140px]">الرصيد الحالي</th>
+              <th class="px-3 py-3 text-center w-24">إجراء</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (acc of visibleAccounts(); track acc.code) {
+              @let level = acc.code.length;
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="px-4 py-2.5">
+                  <div class="flex items-center gap-2" [style.padding-right.px]="((acc.level || level) - 1) * 20">
+                    @if (hasChildren(acc.code)) {
+                      <button
+                        type="button"
+                        (click)="toggleNode(acc.code)"
+                        class="w-6 h-6 flex items-center justify-center text-slate-600 hover:text-indigo-600 rounded-md bg-slate-100 hover:bg-indigo-50 border border-slate-200 transition-colors cursor-pointer"
+                        [title]="isExpanded(acc.code) ? 'طي الحساب' : 'توسيع الحساب'"
+                      >
+                        <mat-icon class="text-sm select-none">{{ isExpanded(acc.code) ? 'keyboard_arrow_down' : 'chevron_left' }}</mat-icon>
+                      </button>
+                    } @else {
+                      <span class="w-6 inline-flex justify-center text-slate-300 select-none">•</span>
+                    }
+                    <span
+                      class="font-mono font-bold px-2 py-0.5 rounded text-[11px]"
+                      [class.bg-indigo-100]="(acc.level || level) === 1"
+                      [class.text-indigo-900]="(acc.level || level) === 1"
+                      [class.bg-slate-100]="(acc.level || level) > 1"
+                      [class.text-slate-700]="(acc.level || level) > 1"
+                    >
+                      {{ acc.code }}
+                    </span>
+                    <span
+                      class="cursor-pointer select-none"
+                      [class.font-black]="(acc.level || level) === 1"
+                      [class.text-slate-950]="(acc.level || level) === 1"
+                      [class.font-bold]="(acc.level || level) === 2"
+                      [class.text-slate-900]="(acc.level || level) === 2"
+                      [class.font-medium]="(acc.level || level) > 2"
+                      [class.text-slate-800]="(acc.level || level) > 2"
+                      (click)="hasChildren(acc.code) ? toggleNode(acc.code) : null"
+                    >
+                      {{ acc.nameAr }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-3 py-2.5 text-slate-600 font-medium">
+                  {{ acc.nameEn || '-' }}
+                </td>
+                <td class="px-3 py-2.5">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                    {{ getAccountTypeNameAr(acc.type) }}
+                  </span>
+                </td>
+                <td class="px-3 py-2.5">
+                  <span
+                    class="px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                    [class.bg-emerald-100]="acc.isDebitNature"
+                    [class.text-emerald-800]="acc.isDebitNature"
+                    [class.bg-indigo-100]="!acc.isDebitNature"
+                    [class.text-indigo-800]="!acc.isDebitNature"
+                  >
+                    {{ acc.isDebitNature ? 'مدين (Debit)' : 'دائن (Credit)' }}
+                  </span>
+                </td>
+                <td class="px-3 py-2.5 text-left">
+                  <span
+                    class="font-mono font-bold text-xs"
+                    [class.text-emerald-700]="acc.balance > 0"
+                    [class.text-rose-700]="acc.balance < 0"
+                    [class.text-slate-500]="acc.balance === 0"
+                  >
+                    {{ formatCurrency(acc.balance) }}
+                  </span>
+                </td>
+                <td class="px-3 py-2.5 text-center">
+                  <button
+                    type="button"
+                    (click)="openAddAccountModal(acc)"
+                    class="p-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded transition-colors cursor-pointer"
+                    title="إضافة حساب فرعي"
+                  >
+                    <mat-icon class="text-base">add_circle</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 2: Journal Entries with Master-Detail Breakdown -->
+  @if (activeTab() === 'journal_entries') {
+    <div class="space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-4">
+        <app-data-grid
+          [columns]="journalColumns"
+          [data]="journalEntries()"
+          title="دفتر القيود اليومية العامة (General Journal Entries)"
+          subtitle="قيود محاسبية مزدوجة متوازنة ومربوطة بحركات المبيعات، المشتريات، وسندات القبض والصرف."
+          [searchable]="true"
+          [exportable]="true"
+          (rowClick)="selectedJournalEntry.set($event)"
+        ></app-data-grid>
+      </div>
+
+      <!-- Master-Detail Breakdown Panel for Selected Entry -->
+      @if (selectedJournalEntry(); as entry) {
+        <div class="bg-white rounded-2xl border border-indigo-100 shadow-md p-5 space-y-4 animate-fadeIn">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-indigo-600">receipt_long</mat-icon>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">
+                  تفاصيل القيد المحاسبي: <span class="font-mono text-indigo-600">{{ entry.entryNumber }}</span>
+                </h4>
+                <p class="text-xs text-slate-500">{{ entry.description }} — {{ entry.date }}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              (click)="selectedJournalEntry.set(null)"
+              class="text-slate-400 hover:text-slate-600 text-sm cursor-pointer"
+            >
+              ✕ إغلاق
+            </button>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                <tr>
+                  <th class="px-3 py-2.5">رمز الحساب</th>
+                  <th class="px-3 py-2.5">اسم الحساب المحاسبي</th>
+                  <th class="px-3 py-2.5 text-left">مدين (Debit)</th>
+                  <th class="px-3 py-2.5 text-left">دائن (Credit)</th>
+                  <th class="px-3 py-2.5">ملاحظات الطرف</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                @for (line of entry.lines; track $index) {
+                  <tr class="hover:bg-slate-50/60">
+                    <td class="px-3 py-2 font-mono font-bold text-indigo-700">{{ line.accountCode }}</td>
+                    <td class="px-3 py-2 font-bold text-slate-800">{{ line.accountName }}</td>
+                    <td class="px-3 py-2 text-left font-mono font-semibold" [class.text-emerald-700]="line.debit > 0">
+                      {{ formatCurrency(line.debit) }}
+                    </td>
+                    <td class="px-3 py-2 text-left font-mono font-semibold" [class.text-indigo-700]="line.credit > 0">
+                      {{ formatCurrency(line.credit) }}
+                    </td>
+                    <td class="px-3 py-2 text-slate-600">{{ line.notes || '-' }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot class="bg-slate-50 font-bold border-t border-slate-200">
+                <tr>
+                  <td colspan="2" class="px-3 py-2 text-slate-900 text-left">المجموع:</td>
+                  <td class="px-3 py-2 text-left text-emerald-700 font-mono">{{ formatCurrency(entry.totalDebit) }}</td>
+                  <td class="px-3 py-2 text-left text-indigo-700 font-mono">{{ formatCurrency(entry.totalCredit) }}</td>
+                  <td class="px-3 py-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800">متوازن 100%</span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Add Sub-Account Modal -->
+  @if (showAddAccountModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 text-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-indigo-600">add_card</mat-icon>
+            <h3 class="font-bold text-slate-900 text-sm">إضافة حساب فرعي جديد في شجرة الحسابات</h3>
+          </div>
+          <button (click)="showAddAccountModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">الحساب الرئيسي الأب:</label>
+            <select
+              [(ngModel)]="formParentCode"
+              (ngModelChange)="onParentCodeChange()"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+            >
+              @for (a of accounts(); track a.code) {
+                <option [value]="a.code">
+                  {{ a.code }} - {{ a.nameAr }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">رمز الحساب الجديد *</label>
+            <input
+              id="input-acc-code"
+              type="text"
+              [(ngModel)]="formAccountCode"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono focus:ring-1 focus:ring-indigo-500"
+              placeholder="مثال: 1113"
+            />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">اسم الحساب باللغة العربية *</label>
+            <input
+              id="input-acc-name-ar"
+              type="text"
+              [(ngModel)]="formAccountNameAr"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+              placeholder="مثال: بنك الإنماء - الحساب التجاري"
+            />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">اسم الحساب بالإنجليزية</label>
+            <input
+              id="input-acc-name-en"
+              type="text"
+              [(ngModel)]="formAccountNameEn"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+              placeholder="Alinma Bank Commercial Account"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button
+            type="button"
+            (click)="showAddAccountModal.set(false)"
+            class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs cursor-pointer"
+          >
+            إلغاء
+          </button>
+          <button
+            id="btn-save-acc"
+            type="button"
+            (click)="saveAccount()"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 cursor-pointer"
+          >
+            حفظ الحساب في الشجرة
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

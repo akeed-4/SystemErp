@@ -1,0 +1,132 @@
+<div class="space-y-6">
+  <!-- Top Header Banner -->
+  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+        <span class="material-icons text-amber-600">calculate</span>
+        <span>إدارة ومحاسبة أسعار التكلفة والمخزون</span>
+      </h2>
+      <p class="text-xs text-slate-500 mt-1">
+        نظام تسعير التكلفة بالمتوسط المرجح المتحرك (Moving Average Cost) وحساب تكلفة البضاعة المباعة (COGS) وتأثيرها على الأرباح.
+      </p>
+    </div>
+
+    <!-- Active Costing Method Tag -->
+    <div class="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2">
+      <span class="material-icons text-amber-600 text-base">verified</span>
+      <div>
+        <span>طريقة التكلفة المفعلة:</span>
+        <strong class="block text-slate-900">المتوسط المرجح المتحرك (Moving Average)</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Costing Engine Simulator Box -->
+  <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 shadow-md border border-indigo-900">
+    <div class="flex items-center gap-2 mb-4 border-b border-white/10 pb-3">
+      <span class="material-icons text-amber-400">insights</span>
+      <h3 class="font-black text-base">محاكي حساب متوسط سعر التكلفة المرجح (Cost Simulator)</h3>
+      <span class="text-xs text-indigo-300 mr-auto">اختبر شراء دفعة جديدة ولاحظ التغير اللحظي في التكلفة وهامش الربح</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+      <!-- Select Product -->
+      <div>
+        <label class="block text-indigo-200 font-semibold mb-1">اختر الصنف المراد محاكاته:</label>
+        <select
+          id="select-sim-product"
+          [ngModel]="simSelectedProductId()"
+          (ngModelChange)="simSelectedProductId.set($event)"
+          class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-xs focus:ring-1 focus:ring-amber-400"
+        >
+          <option *ngFor="let p of erpService.products()" [value]="p.id" class="text-slate-900">
+            {{ p.nameAr }} (الحالي: {{ p.currentStock }} حبة بسعر {{ p.averageCost }} ر.س)
+          </option>
+        </select>
+      </div>
+
+      <!-- Enter Quantity -->
+      <div>
+        <label class="block text-indigo-200 font-semibold mb-1">كمية الشراء الجديدة المقترحة:</label>
+        <input
+          id="input-sim-qty"
+          type="number"
+          min="1"
+          [ngModel]="simNewQuantity()"
+          (ngModelChange)="simNewQuantity.set(+$event)"
+          class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white font-mono text-xs focus:ring-1 focus:ring-amber-400"
+        />
+      </div>
+
+      <!-- Enter Purchase Unit Price -->
+      <div>
+        <label class="block text-indigo-200 font-semibold mb-1">سعر شراء الوحدة الجديد (ر.س):</label>
+        <input
+          id="input-sim-price"
+          type="number"
+          min="1"
+          [ngModel]="simNewPurchasePrice()"
+          (ngModelChange)="simNewPurchasePrice.set(+$event)"
+          class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white font-mono text-xs focus:ring-1 focus:ring-amber-400"
+        />
+      </div>
+    </div>
+
+    <!-- Live Mathematical Formula & Result Breakdown -->
+    <div class="mt-5 p-4 rounded-xl bg-white/5 border border-white/10 grid grid-cols-1 sm:grid-cols-4 gap-4 text-center">
+      <div class="border-l border-white/10 pl-2">
+        <span class="text-[11px] text-indigo-200 block">التكلفة السابقة</span>
+        <strong class="text-lg font-mono text-white">{{ simResult().oldAvg }} ر.س</strong>
+        <span class="text-[10px] text-slate-400 block mt-0.5">رصيد: {{ simResult().oldQty }} وحدة</span>
+      </div>
+
+      <div class="border-l border-white/10 pl-2">
+        <span class="text-[11px] text-amber-300 block font-bold">متوسط التكلفة الجديد</span>
+        <strong class="text-xl font-mono text-amber-400 font-black">{{ simResult().newAvgCost }} ر.س</strong>
+        <span class="text-[10px] text-emerald-300 block mt-0.5">
+          {{ simResult().diff >= 0 ? '+' : '' }}{{ simResult().diff }} ر.س (تغير التكلفة)
+        </span>
+      </div>
+
+      <div class="border-l border-white/10 pl-2">
+        <span class="text-[11px] text-indigo-200 block">إجمالي المخزون الجديد</span>
+        <strong class="text-lg font-mono text-white">{{ simResult().newStock }} وحدة</strong>
+        <span class="text-[10px] text-slate-400 block mt-0.5">+ {{ simNewQuantity() }} وحدة جديدة</span>
+      </div>
+
+      <div>
+        <span class="text-[11px] text-indigo-200 block">هامش الربح المتوقع</span>
+        <strong class="text-lg font-mono text-emerald-400">{{ simResult().newMargin }}%</strong>
+        <span class="text-[10px] text-slate-300 block mt-0.5">سعر البيع: {{ simProduct().sellingPrice }} ر.س</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products & Costing Shared DataGrid -->
+  <div>
+    <app-data-grid
+      [title]="'جدول أسعار التكلفة وتقييم المخزون الحالي'"
+      [subtitle]="'حساب القيمة الإجمالية للمخزون وهوامش الربحية لكل صنف'"
+      [columns]="productColumns"
+      [data]="erpService.products()"
+      mobileCardTitleField="nameAr"
+      mobileCardSubtitleField="category"
+      mobileCardBadgeField="averageCost"
+    >
+    </app-data-grid>
+  </div>
+
+  <!-- Stock Movements Log DataGrid -->
+  <div>
+    <app-data-grid
+      [title]="'سجل حركات المخزون وربطها بالتكلفة والمبيعات'"
+      [subtitle]="'تتبع كل حركة شراء (وارد) أو بيع (صادر) والكميات المتبقية وتكلفة البضاعة المباعة'"
+      [columns]="movementColumns"
+      [data]="erpService.stockMovements()"
+      mobileCardTitleField="referenceNumber"
+      mobileCardSubtitleField="itemName"
+      mobileCardBadgeField="type"
+    >
+    </app-data-grid>
+  </div>
+</div>

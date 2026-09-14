@@ -1,0 +1,321 @@
+<div class="space-y-6" [attr.dir]="i18n.currentDir()">
+  <!-- Top Banner / Header -->
+  <div class="bg-gradient-to-l from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-md border border-indigo-800/40">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-3 py-1 rounded-full text-xs font-semibold mb-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>{{ i18n.isArabic() ? 'إدارة الاشتراكات والتراخيص السحابية' : 'Subscriptions & Cloud Licenses' }}</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black">
+          {{ i18n.isArabic() ? 'باقات واشتراكات المنشأة' : 'Company Subscriptions & Plans' }}
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-300 mt-1">
+          {{ i18n.isArabic()
+            ? 'متابعة ترخيص المنشأة الحالية، استهلاك الموارد المحاسبية، وتحديث أو ترقية الباقة السحابية'
+            : 'Track current facility license, resource usage, and upgrade cloud packages' }}
+        </p>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <button
+          type="button"
+          (click)="openUpgradeModal()"
+          class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+        >
+          <mat-icon class="text-base">upgrade</mat-icon>
+          <span>{{ i18n.isArabic() ? 'ترقية الباقة' : 'Upgrade Plan' }}</span>
+        </button>
+
+        <a
+          routerLink="/register"
+          class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
+        >
+          <mat-icon class="text-base">add_business</mat-icon>
+          <span>{{ i18n.isArabic() ? 'تسجيل منشأة جديدة' : 'Register New Company' }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Current Active Subscription Details Card -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Active Plan Main Info -->
+    <div class="lg:col-span-8 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-400">{{ i18n.isArabic() ? 'المنشأة الحالية:' : 'Current Facility:' }}</span>
+            <span class="text-sm font-black text-slate-900">{{ currentTenant().nameAr }}</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-indigo-50 text-indigo-700 border border-indigo-200">
+              {{ currentTenant().id }}
+            </span>
+          </div>
+          <h2 class="text-xl font-black text-indigo-950 mt-1">
+            {{ activePlan().nameAr }}
+          </h2>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <mat-icon class="text-xs">check_circle</mat-icon>
+            <span>{{ i18n.isArabic() ? 'الاشتراك نشط وسارٍ' : 'Active Subscription' }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Resource Usage Gauges -->
+      <div>
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+          {{ i18n.isArabic() ? 'استهلاك الموارد ضمن الباقة الحالية' : 'Plan Resource Usage' }}
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- Users Limit -->
+          <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
+            <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+              <span class="flex items-center gap-1">
+                <mat-icon class="text-base text-indigo-600">people</mat-icon>
+                <span>المستخدمين النشطين</span>
+              </span>
+              <span class="font-bold font-mono text-slate-800">
+                {{ usageStats().currentUsers }} / {{ usageStats().maxUsers }}
+              </span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div class="bg-indigo-600 h-full rounded-full" style="width: 20%"></div>
+            </div>
+            <span class="text-[10px] text-slate-400 block mt-1.5">متاح إضافة مستخدمين جدد</span>
+          </div>
+
+          <!-- Monthly Invoices -->
+          <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
+            <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+              <span class="flex items-center gap-1">
+                <mat-icon class="text-base text-emerald-600">receipt</mat-icon>
+                <span>فواتير ZATCA</span>
+              </span>
+              <span class="font-bold font-mono text-slate-800">
+                {{ usageStats().invoicesCount }} / {{ usageStats().maxInvoices }}
+              </span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div class="bg-emerald-600 h-full rounded-full" style="width: 15%"></div>
+            </div>
+            <span class="text-[10px] text-emerald-600 font-bold block mt-1.5">فواتير غير محدودة</span>
+          </div>
+
+          <!-- Days remaining -->
+          <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
+            <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+              <span class="flex items-center gap-1">
+                <mat-icon class="text-base text-cyan-600">event</mat-icon>
+                <span>المدة المتبقية</span>
+              </span>
+              <span class="font-bold font-mono text-slate-800">
+                {{ usageStats().daysRemaining }} يوم
+              </span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div class="bg-cyan-600 h-full rounded-full" style="width: 80%"></div>
+            </div>
+            <span class="text-[10px] text-slate-400 block mt-1.5">ينتهي في 2027-01-01</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan Features Included -->
+      <div class="border-t border-slate-100 pt-5">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+          {{ i18n.isArabic() ? 'المميزات والخدمات المفعلة بحسابك' : 'Included Features' }}
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+          @for (f of activePlan().featuresAr; track f) {
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-emerald-500 text-sm shrink-0">check_circle</mat-icon>
+              <span>{{ f }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Upgrade Side Card -->
+    <div class="lg:col-span-4 bg-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-slate-800 shadow-md flex flex-col justify-between">
+      <div>
+        <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 mb-4">
+          <mat-icon class="text-xs">star</mat-icon>
+          <span>{{ i18n.isArabic() ? 'ترقية للأعمال الكبرى' : 'Corporate Upgrade' }}</span>
+        </div>
+
+        <h3 class="text-lg font-black mb-2">
+          {{ i18n.isArabic() ? 'تحتاج فروعاً ومستخدمين غير محدودين؟' : 'Need unlimited branches & users?' }}
+        </h3>
+        <p class="text-xs text-slate-300 leading-relaxed mb-6">
+          {{ i18n.isArabic()
+            ? 'قم بالترقية إلى باقة المؤسسات والمجموعات (Enterprise) للحصول على ربط API مباشر، خوادم مخصصة، وإدارة شاملة لجميع مراكز التكلفة.'
+            : 'Upgrade to Enterprise for direct RESTful API webhooks, dedicated server, and multi-cost centers.' }}
+        </p>
+
+        <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs mb-6">
+          <div class="text-slate-400">{{ i18n.isArabic() ? 'باقة المؤسسات (Enterprise):' : 'Enterprise Plan:' }}</div>
+          <div class="flex items-baseline gap-1">
+            <span class="text-2xl font-black text-white">999</span>
+            <span class="text-xs text-slate-400 font-bold">ر.س / شهرياً</span>
+          </div>
+          <div class="text-[11px] text-emerald-400 font-bold">خصم شهرين عند السداد السنوي (9,990 ر.س)</div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        (click)="openUpgradeModal('enterprise')"
+        class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+      >
+        <mat-icon class="text-base">rocket_launch</mat-icon>
+        <span>{{ i18n.isArabic() ? 'الترقية إلى باقة المؤسسات الآن' : 'Upgrade to Enterprise Now' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Invoices and Payment History -->
+  <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-base font-black text-slate-900">
+          {{ i18n.isArabic() ? 'سجل فواتير الاشتراكات والمدفوعات' : 'Subscription Billing History' }}
+        </h3>
+        <p class="text-xs text-slate-500">
+          {{ i18n.isArabic() ? 'الفواتير الضريبية المسددة الخاصة بالاشتراك السحابي' : 'Tax invoices paid for your cloud subscriptions' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs text-start">
+        <thead>
+          <tr class="border-b border-slate-200 text-slate-500 text-start">
+            <th class="py-3 px-4 font-bold text-start">رقم الفاتورة</th>
+            <th class="py-3 px-4 font-bold text-start">التاريخ</th>
+            <th class="py-3 px-4 font-bold text-start">الباقة</th>
+            <th class="py-3 px-4 font-bold text-start">الدورة</th>
+            <th class="py-3 px-4 font-bold text-start">المبلغ الأساسي</th>
+            <th class="py-3 px-4 font-bold text-start">الضريبة 15%</th>
+            <th class="py-3 px-4 font-bold text-start">الإجمالي</th>
+            <th class="py-3 px-4 font-bold text-start">طريقة الدفع</th>
+            <th class="py-3 px-4 font-bold text-start">الحالة</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (item of paymentHistory(); track item.id) {
+            <tr class="hover:bg-slate-50/70 transition-colors">
+              <td class="py-3 px-4 font-mono font-bold text-indigo-600">{{ item.id }}</td>
+              <td class="py-3 px-4 font-mono text-slate-600">{{ item.date }}</td>
+              <td class="py-3 px-4 font-bold text-slate-900">{{ item.planName }}</td>
+              <td class="py-3 px-4 text-slate-600">{{ item.billingCycle }}</td>
+              <td class="py-3 px-4 font-mono text-slate-700">{{ item.amount.toLocaleString() }} ر.س</td>
+              <td class="py-3 px-4 font-mono text-slate-500">{{ item.vat.toLocaleString() }} ر.س</td>
+              <td class="py-3 px-4 font-mono font-bold text-slate-900">{{ item.total.toLocaleString() }} ر.س</td>
+              <td class="py-3 px-4 text-slate-600">{{ item.method }}</td>
+              <td class="py-3 px-4">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                  {{ item.status }}
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- UPGRADE MODAL -->
+  @if (showUpgradeModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-6 text-white shadow-2xl space-y-5 animate-fadeIn">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div class="flex items-center gap-2">
+            <mat-icon class="text-indigo-400">upgrade</mat-icon>
+            <h3 class="text-base font-black">ترقية باقة اشتراك المنشأة</h3>
+          </div>
+          <button (click)="closeUpgradeModal()" class="text-slate-400 hover:text-white">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        @if (upgradeSuccessMessage()) {
+          <div class="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-700 text-emerald-300 text-xs flex items-center gap-2">
+            <mat-icon class="text-emerald-400">check_circle</mat-icon>
+            <span>{{ upgradeSuccessMessage() }}</span>
+          </div>
+        }
+
+        <!-- Plan selection -->
+        <div class="space-y-3">
+          <label class="block text-xs font-bold text-slate-300">اختر الباقة المراد الترقية إليها:</label>
+          <div class="grid grid-cols-3 gap-2">
+            @for (p of plans(); track p.id) {
+              <button
+                type="button"
+                (click)="selectedPlanToUpgrade.set(p.id)"
+                class="p-3 rounded-2xl border text-center text-xs transition-all cursor-pointer"
+                [class.bg-indigo-600]="selectedPlanToUpgrade() === p.id"
+                [class.border-indigo-500]="selectedPlanToUpgrade() === p.id"
+                [class.bg-slate-950]="selectedPlanToUpgrade() !== p.id"
+                [class.border-slate-800]="selectedPlanToUpgrade() !== p.id"
+              >
+                <div class="font-bold">{{ p.nameAr.split('(')[0] }}</div>
+                <div class="text-[11px] font-mono text-slate-300 mt-1">{{ p.priceMonthly }} ر.س/شهر</div>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Cycle selection -->
+        <div class="flex items-center gap-3">
+          <button
+            type="button"
+            (click)="upgradeBillingCycle.set('monthly')"
+            class="flex-1 py-2 px-3 rounded-xl border text-xs font-bold"
+            [class.bg-indigo-600]="upgradeBillingCycle() === 'monthly'"
+            [class.border-indigo-500]="upgradeBillingCycle() === 'monthly'"
+            [class.bg-slate-950]="upgradeBillingCycle() !== 'monthly'"
+            [class.border-slate-800]="upgradeBillingCycle() !== 'monthly'"
+          >
+            سداد شهري
+          </button>
+          <button
+            type="button"
+            (click)="upgradeBillingCycle.set('yearly')"
+            class="flex-1 py-2 px-3 rounded-xl border text-xs font-bold"
+            [class.bg-indigo-600]="upgradeBillingCycle() === 'yearly'"
+            [class.border-indigo-500]="upgradeBillingCycle() === 'yearly'"
+            [class.bg-slate-950]="upgradeBillingCycle() !== 'yearly'"
+            [class.border-slate-800]="upgradeBillingCycle() !== 'yearly'"
+          >
+            سداد سنوي (خصم شهرين)
+          </button>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button
+            type="button"
+            (click)="closeUpgradeModal()"
+            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold"
+          >
+            إلغاء
+          </button>
+          <button
+            type="button"
+            (click)="confirmUpgrade()"
+            class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md cursor-pointer"
+          >
+            تأكيد الترقية فوراً
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

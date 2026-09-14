@@ -1,0 +1,385 @@
+<div class="space-y-6">
+  <!-- Top Bar -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+    <div>
+      <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+        <span class="material-icons text-emerald-600">point_of_sale</span>
+        <span>إدارة المبيعات والفواتير الإلكترونية (ZATCA)</span>
+      </h2>
+      <p class="text-xs text-slate-500 mt-1">
+        إصدار فواتير ضريبية قياسية ومبسطة، توليد كود QR بترميز Base64 TLV، وربط تلقائي بالقيود المحاسبية والمخزون.
+      </p>
+    </div>
+
+    <button
+      id="btn-open-create-invoice"
+      type="button"
+      (click)="showCreateModal.set(true)"
+      class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+    >
+      <span class="material-icons text-sm">add</span>
+      <span>فاتورة مبيعات جديدة</span>
+    </button>
+  </div>
+
+  <!-- Invoices Shared DataGrid -->
+  <app-data-grid
+    [title]="'سجل فواتير المبيعات'"
+    [subtitle]="'عرض جدول DevExtreme على شاشات سطح المكتب والبطاقات على الهواتف'"
+    [columns]="columns"
+    [data]="salesInvoices"
+    mobileCardTitleField="invoiceNumber"
+    mobileCardSubtitleField="partyName"
+    mobileCardBadgeField="grandTotal"
+    (rowClick)="printInvoice($event)"
+  >
+  </app-data-grid>
+
+  <!-- Create New Invoice Modal -->
+  <div *ngIf="showCreateModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden my-auto border border-slate-200">
+      <!-- Modal Header -->
+      <div class="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-icons text-emerald-600">receipt</span>
+          <h3 class="font-bold text-slate-900 text-sm">إصدار فاتورة مبيعات جديدة (ZATCA E-Invoice)</h3>
+        </div>
+        <button
+          id="btn-close-sales-modal"
+          (click)="showCreateModal.set(false)"
+          class="text-slate-400 hover:text-slate-600 p-1"
+        >
+          <span class="material-icons text-base">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto space-y-6 text-xs">
+        <!-- Customer & Invoice Type Info -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">اختيار من قائمة العملاء</label>
+            <select
+              (change)="onCustomerSelect($any($event.target).value)"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-indigo-700 focus:ring-1 focus:ring-emerald-500">
+              <option value="">-- اختر عميل معتمد --</option>
+              <option *ngFor="let c of erpService.customers()" [value]="c.id">
+                {{ c.code }} - {{ c.nameAr }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">اسم العميل / المشتري *</label>
+            <input
+              id="input-customer-name"
+              type="text"
+              [(ngModel)]="formCustomerName"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500"
+              placeholder="مثال: شركة التوريدات التقنية"
+            />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">الرقم الضريبي للعميل (VAT)</label>
+            <input
+              id="input-customer-vat"
+              type="text"
+              [(ngModel)]="formCustomerVat"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono focus:ring-1 focus:ring-emerald-500"
+              placeholder="310XXXXXXXX0003"
+            />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">نوع الفاتورة لهيئة الزكاة</label>
+            <select
+              id="select-invoice-type"
+              [(ngModel)]="formInvoiceType"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 font-medium"
+            >
+              <option value="simplified">فاتورة ضريبية مبسطة (B2C / مشتريات عامة)</option>
+              <option value="tax_invoice">فاتورة ضريبية قياسية (B2B / شركات ومؤسسات)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">طريقة السداد</label>
+            <select
+              id="select-payment-method"
+              [(ngModel)]="formPaymentMethod"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500"
+            >
+              <option value="bank_transfer">تحويل بنكي (مصرف الراجحي)</option>
+              <option value="cash">نقداً (الصندوق الرئيسي)</option>
+              <option value="bank_card">شبكة / بطاقة مدى</option>
+              <option value="credit">آجل (حساب العميل ذمم مدينة)</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block font-semibold text-slate-700 mb-1">عنوان العميل</label>
+            <input
+              id="input-customer-address"
+              type="text"
+              [(ngModel)]="formCustomerAddress"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500"
+              placeholder="المدينة، الحي، اسم الشارع"
+            />
+          </div>
+        </div>
+
+        <!-- Line Items Section -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1">
+              <span class="material-icons text-sm text-emerald-600">list_alt</span>
+              <span>بنود الفاتورة والمنتجات</span>
+            </h4>
+            <button
+              id="btn-add-line-item"
+              type="button"
+              (click)="addLine()"
+              class="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded text-xs font-semibold flex items-center gap-1 transition-colors"
+            >
+              <span class="material-icons text-xs">add</span>
+              <span>إضافة بند جديد</span>
+            </button>
+          </div>
+
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-2.5">المنتج / الصنف</th>
+                  <th class="p-2.5 w-24 text-center">الكمية</th>
+                  <th class="p-2.5 w-28 text-left">سعر البيع</th>
+                  <th class="p-2.5 w-24 text-left">الخصم</th>
+                  <th class="p-2.5 w-28 text-left">المجموع قبل الضريبة</th>
+                  <th class="p-2.5 w-24 text-left">الضريبة (15%)</th>
+                  <th class="p-2.5 w-28 text-left">الإجمالي</th>
+                  <th class="p-2.5 w-12 text-center">حذف</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let line of formLines; let idx = index" class="hover:bg-slate-50">
+                  <td class="p-2">
+                    <select
+                      [id]="'select-prod-' + idx"
+                      [ngModel]="line.itemId"
+                      (ngModelChange)="onProductSelect(idx, $event)"
+                      class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs"
+                    >
+                      <option *ngFor="let p of erpService.products()" [value]="p.id">
+                        {{ p.nameAr }} (المتاح: {{ p.currentStock }} - سعر التكلفة: {{ p.averageCost }} ر.س)
+                      </option>
+                    </select>
+                  </td>
+                  <td class="p-2">
+                    <input
+                      [id]="'input-qty-' + idx"
+                      type="number"
+                      min="1"
+                      [(ngModel)]="line.quantity"
+                      class="w-full text-center bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono"
+                    />
+                  </td>
+                  <td class="p-2">
+                    <input
+                      [id]="'input-price-' + idx"
+                      type="number"
+                      [(ngModel)]="line.unitPrice"
+                      class="w-full text-left bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono"
+                    />
+                  </td>
+                  <td class="p-2">
+                    <input
+                      [id]="'input-discount-' + idx"
+                      type="number"
+                      min="0"
+                      [(ngModel)]="line.discount"
+                      class="w-full text-left bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono"
+                    />
+                  </td>
+                  <td class="p-2 text-left font-mono font-semibold text-slate-800">
+                    {{ ((line.quantity * line.unitPrice) - (line.discount || 0)).toFixed(2) }}
+                  </td>
+                  <td class="p-2 text-left font-mono text-indigo-900">
+                    {{ ((((line.quantity * line.unitPrice) - (line.discount || 0)) * 15) / 100).toFixed(2) }}
+                  </td>
+                  <td class="p-2 text-left font-mono font-bold text-emerald-700">
+                    {{ ((((line.quantity * line.unitPrice) - (line.discount || 0)) * 1.15)).toFixed(2) }}
+                  </td>
+                  <td class="p-2 text-center">
+                    <button
+                      type="button"
+                      (click)="removeLine(idx)"
+                      [disabled]="formLines.length <= 1"
+                      class="text-rose-500 hover:text-rose-700 disabled:opacity-30"
+                    >
+                      <span class="material-icons text-sm">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Calculations Summary Box -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Automatic Accounting Impact Preview -->
+          <div class="bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100 text-[11px] space-y-1.5">
+            <span class="font-bold text-indigo-950 flex items-center gap-1 mb-1">
+              <span class="material-icons text-xs">auto_fix_high</span>
+              <span>القيود المحاسبية التلقائية وحركة المخزون:</span>
+            </span>
+            <div class="text-slate-600">
+              • سيتم خصم الكميات آلياً من المستودع مع توليد حركة منصرف مبيعات.
+            </div>
+            <div class="text-slate-600">
+              • قيد المبيعات: مدين ({{ formPaymentMethod === 'credit' ? 'العملاء' : 'البنك/الصندوق' }}) بمبلغ {{ formGrandTotal.toFixed(2) }} ر.س
+            </div>
+            <div class="text-slate-600">
+              • دائن: إيراد المبيعات {{ formSubtotal.toFixed(2) }} ر.س + ضريبة المخرجات 15% {{ formVat.toFixed(2) }} ر.س
+            </div>
+            <div class="text-emerald-700 font-semibold">
+              • قيد التكلفة (COGS): مدين تكلفة البضاعة المباعة ودائن المخزون السلعي.
+            </div>
+          </div>
+
+          <!-- Total Calculation -->
+          <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-2">
+            <div class="flex justify-between text-slate-600">
+              <span>المجموع قبل الضريبة:</span>
+              <span class="font-mono font-bold">{{ formSubtotal.toFixed(2) }} ر.س</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>ضريبة القيمة المضافة (15%):</span>
+              <span class="font-mono font-bold text-indigo-900">{{ formVat.toFixed(2) }} ر.س</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>مجمل الربح التقديري للفاتورة:</span>
+              <span class="font-mono font-bold text-emerald-600">{{ formEstimatedProfit.toFixed(2) }} ر.س</span>
+            </div>
+            <div class="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-200">
+              <span>إجمالي الفاتورة المستحق:</span>
+              <span class="font-mono text-emerald-800 text-base">{{ formGrandTotal.toFixed(2) }} ر.س</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
+          <div class="flex items-center gap-2">
+            <span class="material-icons text-emerald-700 text-lg">cloud_upload</span>
+            <div>
+              <p class="font-bold text-slate-800 text-xs">إرسال واختبار تلقائي مع الهيئة (ZATCA Test Mode)</p>
+              <p class="text-[11px] text-slate-500">إرسال الفاتورة لمنصة الهيئة تجربة واعتمادها وتوليد الختم والـ QR فور الحفظ</p>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer select-none">
+            <input
+              id="toggle-zatca-test-mode"
+              type="checkbox"
+              [(ngModel)]="formSendToZatcaTest"
+              class="sr-only peer"
+            />
+            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+            <span class="ms-2 text-xs font-bold text-slate-700" [class.text-emerald-700]="formSendToZatcaTest">
+              {{ formSendToZatcaTest ? 'مفعّل (Test Active)' : 'غير مفعّل' }}
+            </span>
+          </label>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">ملاحظات الفاتورة أو شروط التوريد</label>
+          <input
+            id="input-invoice-notes"
+            type="text"
+            [(ngModel)]="formNotes"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500"
+            placeholder="مثال: مدة التوريد 3 أيام من تاريخ أمر الشراء"
+          />
+        </div>
+      </div>
+
+      <!-- Modal Footer Actions -->
+      <div class="p-4 bg-slate-100 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-xs text-slate-600">
+          <span class="material-icons text-sm text-emerald-600">verified</span>
+          <span>متوافقة مع اشتراطات الفوترة الإلكترونية - المرحلة الثانية</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            id="btn-cancel-sales"
+            type="button"
+            (click)="showCreateModal.set(false)"
+            class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors"
+          >
+            إلغاء
+          </button>
+
+          <button
+            id="btn-save-sales-invoice"
+            type="button"
+            (click)="saveInvoice()"
+            class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <span class="material-icons text-sm">{{ formSendToZatcaTest ? 'send_and_archive' : 'check_circle' }}</span>
+            <span>{{ formSendToZatcaTest ? 'إصدار الفاتورة وإرسالها للهيئة (Test)' : 'حفظ وإصدار الفاتورة وتوليد QR' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZATCA Test Result Dialog -->
+  <div *ngIf="zatcaTestResult()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 text-xs space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="material-icons text-emerald-600">verified</span>
+          <h3 class="font-bold text-slate-900 text-sm">نتيجة تدقيق الفاتورة مع منصة هيئة الزكاة</h3>
+        </div>
+        <button (click)="zatcaTestResult.set(null)" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+
+      <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
+        <span class="font-bold block">الفاتورة رقم: {{ zatcaTestResult()?.invoiceNumber }}</span>
+        <p class="text-[11px] mt-1">الحالة: معتمدة ومطابقة لشروط ومعايير المرحلة الثانية (Fatoora Phase 2)</p>
+      </div>
+
+      <div class="space-y-1.5 bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <span class="font-bold text-slate-700 block mb-1">تفاصيل فحص المنظومة:</span>
+        <div *ngFor="let msg of zatcaTestResult()?.messages" class="text-slate-600 font-mono text-[11px]">
+          • {{ msg }}
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button
+          (click)="zatcaTestResult.set(null)"
+          class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer"
+        >
+          إغلاق
+        </button>
+        <button
+          (click)="printInvoiceFromTest()"
+          class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
+        >
+          <span class="material-icons text-sm">print</span>
+          <span>معاينة وطباعة الفاتورة</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Print Modal -->
+<app-invoice-print
+  *ngIf="selectedInvoice()"
+  [invoice]="selectedInvoice()!"
+  [tenant]="erpService.activeTenant()"
+  (close)="selectedInvoice.set(null)"
+></app-invoice-print>

@@ -1,0 +1,1029 @@
+<div class="space-y-6">
+  <!-- Toast Feedback Notification -->
+  <div *ngIf="feedbackMessage()" class="fixed bottom-6 left-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 border border-slate-700 animate-bounce">
+    <mat-icon class="text-emerald-400 text-lg">check_circle</mat-icon>
+    <span class="text-sm font-medium">{{ feedbackMessage() }}</span>
+  </div>
+
+  <!-- Header & KPI Quick Summary -->
+  <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 text-xs font-semibold bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100">
+            النواة المركزية للنظام المحاسبي
+          </span>
+          <span class="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
+            Multi-Tenant Setup
+          </span>
+        </div>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight mt-1">
+          إدارة الكيانات والبيانات الأساسية (Master Data)
+        </h1>
+        <p class="text-sm text-slate-500 mt-0.5">
+          تعريف وضبط العملاء، الموردين، دليل الأصناف، وحدات القياس ومعاملاتها، العملات وأسعار الصرف، وطرق الدفع والتوجيه المحاسبي.
+        </p>
+      </div>
+
+      <!-- Quick KPI Chips -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
+            {{ erpService.customers().length }}
+          </div>
+          <div class="text-right text-xs">
+            <span class="text-slate-500 block">إجمالي العملاء</span>
+            <span class="font-bold text-slate-800">{{ totalCustomerDebt() | number:'1.0-0' }} ر.س</span>
+          </div>
+        </div>
+
+        <div class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+            {{ erpService.suppliers().length }}
+          </div>
+          <div class="text-right text-xs">
+            <span class="text-slate-500 block">إجمالي الموردين</span>
+            <span class="font-bold text-slate-800">{{ totalSupplierDebt() | number:'1.0-0' }} ر.س</span>
+          </div>
+        </div>
+
+        <div class="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">
+            {{ erpService.products().length }}
+          </div>
+          <div class="text-right text-xs">
+            <span class="text-slate-500 block">الأصناف المسجلة</span>
+            <span class="font-bold text-slate-800">{{ totalInventoryValue() | number:'1.0-0' }} ر.س</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-1 mt-6 border-b border-slate-200">
+      <button
+        (click)="setTab('customers')"
+        [class]="activeTab() === 'customers' ? 'px-4 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-xs flex items-center gap-2 transition-all' : 'px-4 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-2 transition-all'">
+        <mat-icon class="text-lg">people</mat-icon>
+        <span>العملاء ({{ erpService.customers().length }})</span>
+      </button>
+
+      <button
+        (click)="setTab('suppliers')"
+        [class]="activeTab() === 'suppliers' ? 'px-4 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-xs flex items-center gap-2 transition-all' : 'px-4 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-2 transition-all'">
+        <mat-icon class="text-lg">local_shipping</mat-icon>
+        <span>الموردين ({{ erpService.suppliers().length }})</span>
+      </button>
+
+      <button
+        (click)="setTab('items')"
+        [class]="activeTab() === 'items' ? 'px-4 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-xs flex items-center gap-2 transition-all' : 'px-4 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-2 transition-all'">
+        <mat-icon class="text-lg">inventory_2</mat-icon>
+        <span>دليل الأصناف ({{ erpService.products().length }})</span>
+      </button>
+
+      <button
+        (click)="setTab('units')"
+        [class]="activeTab() === 'units' ? 'px-4 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-xs flex items-center gap-2 transition-all' : 'px-4 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-2 transition-all'">
+        <mat-icon class="text-lg">straighten</mat-icon>
+        <span>وحدات القياس ({{ erpService.units().length }})</span>
+      </button>
+
+      <button
+        (click)="setTab('currencies')"
+        [class]="activeTab() === 'currencies' ? 'px-4 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-xs flex items-center gap-2 transition-all' : 'px-4 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-2 transition-all'">
+        <mat-icon class="text-lg">currency_exchange</mat-icon>
+        <span>العملات وأسعار الصرف ({{ erpService.currencies().length }})</span>
+      </button>
+
+      <button
+        (click)="setTab('payment_methods')"
+        [class]="activeTab() === 'payment_methods' ? 'px-4 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-xs flex items-center gap-2 transition-all' : 'px-4 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-2 transition-all'">
+        <mat-icon class="text-lg">credit_card</mat-icon>
+        <span>طرق الدفع والتحصيل ({{ erpService.paymentMethods().length }})</span>
+      </button>
+
+      <button
+        (click)="setTab('warehouses')"
+        [class]="activeTab() === 'warehouses' ? 'px-4 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 text-white shadow-xs flex items-center gap-2 transition-all' : 'px-4 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-100 flex items-center gap-2 transition-all'">
+        <mat-icon class="text-lg">warehouse</mat-icon>
+        <span>المستودعات والفئات</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB 1: CUSTOMERS (العملاء) -->
+  <div *ngIf="activeTab() === 'customers'" class="space-y-4">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200">
+      <div class="relative w-full sm:w-80">
+        <mat-icon class="absolute right-3 top-2.5 text-slate-400 text-sm">search</mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="بحث بالاسم، الكود، الجوال، الرقم الضريبي..."
+          class="w-full pr-9 pl-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-hidden focus:border-indigo-500 transition-all" />
+      </div>
+
+      <button
+        (click)="openAddCustomer()"
+        class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-xs transition-all">
+        <mat-icon class="text-sm">person_add</mat-icon>
+        <span>إضافة عميل جديد</span>
+      </button>
+    </div>
+
+    <!-- Customers Grid -->
+    <app-data-grid
+      title="قائمة العملاء المعتمدين"
+      [data]="filteredCustomers()"
+      [columns]="customerColumns"
+      [defaultPageSize]="8"
+      (rowClick)="openEditCustomer($event)">
+    </app-data-grid>
+  </div>
+
+  <!-- TAB 2: SUPPLIERS (الموردين) -->
+  <div *ngIf="activeTab() === 'suppliers'" class="space-y-4">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200">
+      <div class="relative w-full sm:w-80">
+        <mat-icon class="absolute right-3 top-2.5 text-slate-400 text-sm">search</mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="بحث باسم المورد، الكود، الآيبان..."
+          class="w-full pr-9 pl-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-hidden focus:border-indigo-500 transition-all" />
+      </div>
+
+      <button
+        (click)="openAddSupplier()"
+        class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-xs transition-all">
+        <mat-icon class="text-sm">add_business</mat-icon>
+        <span>إضافة مورد جديد</span>
+      </button>
+    </div>
+
+    <app-data-grid
+      title="سجل الموردين والتوريدات"
+      [data]="filteredSuppliers()"
+      [columns]="supplierColumns"
+      [defaultPageSize]="8"
+      (rowClick)="openEditSupplier($event)">
+    </app-data-grid>
+  </div>
+
+  <!-- TAB 3: PRODUCTS & ITEMS (دليل الأصناف) -->
+  <div *ngIf="activeTab() === 'items'" class="space-y-4">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200">
+      <div class="relative w-full sm:w-80">
+        <mat-icon class="absolute right-3 top-2.5 text-slate-400 text-sm">search</mat-icon>
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          placeholder="بحث باسم الصنف، SKU، الباركود، الفئة..."
+          class="w-full pr-9 pl-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-hidden focus:border-indigo-500 transition-all" />
+      </div>
+
+      <button
+        (click)="openAddProduct()"
+        class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-xs transition-all">
+        <mat-icon class="text-sm">add_box</mat-icon>
+        <span>إضافة صنف جديد للمخزون</span>
+      </button>
+    </div>
+
+    <app-data-grid
+      title="دليل أصناف المخزون والخدمات"
+      [data]="filteredProducts()"
+      [columns]="productColumns"
+      [defaultPageSize]="8"
+      (rowClick)="openEditProduct($event)">
+    </app-data-grid>
+  </div>
+
+  <!-- TAB 4: UNITS OF MEASURE (وحدات القياس) -->
+  <div *ngIf="activeTab() === 'units'" class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- UOM List (2 Cols) -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">وحدات القياس المسجلة</h3>
+            <p class="text-xs text-slate-500">معاملات التحويل بين الوحدات الأساسية والفرعية</p>
+          </div>
+          <button
+            (click)="openAddUnit()"
+            class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-xs">
+            <mat-icon class="text-sm">add</mat-icon>
+            <span>إضافة وحدة</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div *ngFor="let uom of erpService.units()" class="bg-white p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-all flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 font-black text-sm flex items-center justify-center border border-indigo-100">
+                {{ uom.code }}
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-800 text-sm">{{ uom.nameAr }}</span>
+                  <span *ngIf="uom.isBaseUnit" class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-semibold">
+                    وحدة أساسية
+                  </span>
+                </div>
+                <span class="text-xs text-slate-500 block">
+                  {{ uom.isBaseUnit ? 'المعامل: 1' : '1 ' + uom.nameAr + ' = ' + uom.conversionFactor + ' ' + (uom.baseUnitCode || 'حبة') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <button (click)="openEditUnit(uom)" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg">
+                <mat-icon class="text-sm">edit</mat-icon>
+              </button>
+              <button *ngIf="!uom.isBaseUnit" (click)="deleteUnit(uom.id)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg">
+                <mat-icon class="text-sm">delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live UOM Calculator (1 Col) -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 h-fit">
+        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <mat-icon class="text-indigo-600">calculate</mat-icon>
+          <h3 class="font-bold text-slate-800 text-sm">حاسبة تحويل الوحدات التفاعلية</h3>
+        </div>
+
+        <p class="text-xs text-slate-500 leading-relaxed">
+          اختبر معادلات التحويل الآلي للأصناف عند الجرد أو إصدار فواتير المبيعات والمشتريات.
+        </p>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600 block mb-1">الكمية</label>
+            <input
+              type="number"
+              [ngModel]="uomQty()"
+              (ngModelChange)="uomQty.set($event)"
+              class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500" />
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-600 block mb-1">الوحدة المحددة</label>
+            <select
+              [ngModel]="uomSelectedId()"
+              (ngModelChange)="uomSelectedId.set($event)"
+              class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500">
+              <option *ngFor="let u of erpService.units()" [value]="u.id">
+                {{ u.nameAr }} ({{ u.code }})
+              </option>
+            </select>
+          </div>
+
+          <div class="p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-center space-y-1 mt-4">
+            <span class="text-xs text-indigo-600 font-medium">الكمية المعادلة بالوحدة الأساسية:</span>
+            <div class="text-2xl font-black text-indigo-900">
+              {{ convertedPieces() | number }}
+              <span class="text-sm font-semibold">حبة / وحدة أساسية</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: CURRENCIES & EXCHANGE RATES (العملات وأسعار الصرف) -->
+  <div *ngIf="activeTab() === 'currencies'" class="space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Currencies List (2 Cols) -->
+      <div class="lg:col-span-2 space-y-4">
+        <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">قائمة العملات وأسعار الصرف</h3>
+            <p class="text-xs text-slate-500">العملة الأساسية للنظام: <strong>الريال السعودي (SAR)</strong></p>
+          </div>
+          <button
+            (click)="openAddCurrency()"
+            class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-xs">
+            <mat-icon class="text-sm">add</mat-icon>
+            <span>إضافة عملة جديدة</span>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <div *ngFor="let cur of erpService.currencies()" class="bg-white p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 font-black text-base flex items-center justify-center border border-slate-200">
+                {{ cur.symbol }}
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-900 text-sm">{{ cur.nameAr }}</span>
+                  <span class="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">{{ cur.code }}</span>
+                  <span *ngIf="cur.isBaseCurrency" class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-semibold">
+                    العملة الأساسية (Base)
+                  </span>
+                </div>
+                <span class="text-xs text-slate-400 block mt-0.5">آخر تحديث: {{ cur.lastUpdated }}</span>
+              </div>
+            </div>
+
+            <!-- Rate Input or Display -->
+            <div class="flex items-center gap-3">
+              <div class="text-left">
+                <span class="text-[11px] text-slate-500 block">سعر الصرف مقابل SAR</span>
+                <div *ngIf="cur.isBaseCurrency" class="text-base font-bold text-slate-800 font-mono">
+                  1.0000
+                </div>
+                <div *ngIf="!cur.isBaseCurrency" class="flex items-center gap-2">
+                  <input
+                    #rateInput
+                    type="number"
+                    step="0.0001"
+                    [value]="cur.exchangeRate"
+                    class="w-24 px-2 py-1 text-sm font-mono font-bold bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-hidden focus:border-indigo-500" />
+                  <button
+                    (click)="updateRate(cur, rateInput.value)"
+                    class="px-2.5 py-1 text-xs bg-slate-800 text-white rounded font-medium hover:bg-slate-900">
+                    تحديث
+                  </button>
+                </div>
+              </div>
+
+              <button (click)="openEditCurrency(cur)" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded-lg">
+                <mat-icon class="text-sm">edit</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FX Live Converter Calculator -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 h-fit">
+        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <mat-icon class="text-indigo-600">sync_alt</mat-icon>
+          <h3 class="font-bold text-slate-800 text-sm">محول العملات المالي اللحظي</h3>
+        </div>
+
+        <p class="text-xs text-slate-500 leading-relaxed">
+          تحويل فوري لأي مبلغ بين العملات المعرفة بالنظام بناءً على جدول أسعار الصرف الحية.
+        </p>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600 block mb-1">المبلغ المراد تحويله</label>
+            <input
+              type="number"
+              [ngModel]="calcAmount()"
+              (ngModelChange)="calcAmount.set($event)"
+              class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs font-semibold text-slate-600 block mb-1">من عملة</label>
+              <select
+                [ngModel]="calcFrom()"
+                (ngModelChange)="calcFrom.set($event)"
+                class="w-full px-2 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden">
+                <option *ngFor="let c of erpService.currencies()" [value]="c.code">
+                  {{ c.code }} - {{ c.nameAr }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-slate-600 block mb-1">إلى عملة</label>
+              <select
+                [ngModel]="calcTo()"
+                (ngModelChange)="calcTo.set($event)"
+                class="w-full px-2 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden">
+                <option *ngFor="let c of erpService.currencies()" [value]="c.code">
+                  {{ c.code }} - {{ c.nameAr }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-center space-y-1 mt-4">
+            <span class="text-xs text-emerald-700 font-medium">الناتج التقديري المحول:</span>
+            <div class="text-2xl font-black text-emerald-900 font-mono">
+              {{ convertedValue() | number:'1.2-2' }}
+              <span class="text-sm font-semibold">{{ calcTo() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: PAYMENT METHODS (طرق الدفع والتحصيل والتوجيه المحاسبي) -->
+  <div *ngIf="activeTab() === 'payment_methods'" class="space-y-4">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200">
+      <div>
+        <h3 class="font-bold text-slate-800 text-base">طرق الدفع وربط القيود المحاسبية (GL Mapping)</h3>
+        <p class="text-xs text-slate-500">تحديد الحساب المالي المقابل في شجرة الحسابات والعمولات البنكية</p>
+      </div>
+
+      <button
+        (click)="openAddPaymentMethod()"
+        class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center gap-2 shadow-xs transition-all">
+        <mat-icon class="text-sm">add_card</mat-icon>
+        <span>إضافة طريقة دفع جديدة</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let pm of erpService.paymentMethods()" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4 hover:border-indigo-300 transition-all">
+        <div>
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100">
+                <mat-icon>{{ pm.icon }}</mat-icon>
+              </div>
+              <div>
+                <h4 class="font-bold text-slate-900 text-sm">{{ pm.nameAr }}</h4>
+                <span class="text-xs text-slate-500 block font-mono">{{ pm.code }}</span>
+              </div>
+            </div>
+
+            <span [class]="pm.status === 'active' ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800' : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600'">
+              {{ pm.status === 'active' ? 'مفعل' : 'معطل' }}
+            </span>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
+            <div class="flex justify-between items-center text-slate-600">
+              <span>الحساب المحاسبي المرتبط:</span>
+              <span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded font-mono">{{ pm.linkedAccountCode }}</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-600">
+              <span>اسم حساب الأستاذ:</span>
+              <span class="font-medium text-slate-700 text-left">{{ pm.linkedAccountName }}</span>
+            </div>
+            <div *ngIf="pm.commissionPercent" class="flex justify-between items-center text-slate-600">
+              <span>عمولة المعالجة البنكية:</span>
+              <span class="font-bold text-amber-600">{{ pm.commissionPercent }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button (click)="openEditPaymentMethod(pm)" class="px-3 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 rounded-lg transition-all flex items-center gap-1">
+            <mat-icon class="text-xs">edit</mat-icon>
+            <span>تعديل</span>
+          </button>
+          <button (click)="deletePaymentMethod(pm.id)" class="px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50 rounded-lg transition-all flex items-center gap-1">
+            <mat-icon class="text-xs">delete</mat-icon>
+            <span>حذف</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 7: WAREHOUSES & CATEGORIES (المستودعات وفئات الأصناف) -->
+  <div *ngIf="activeTab() === 'warehouses'" class="space-y-6">
+    <!-- Warehouses Section -->
+    <div class="space-y-4">
+      <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">المستودعات ومواقع التخزين والفروع</h3>
+          <p class="text-xs text-slate-500">إدارة المستودع الافتراضي، الأمناء، والمواقع الجغرافية</p>
+        </div>
+        <button
+          (click)="openAddWarehouse()"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-xs">
+          <mat-icon class="text-sm">add_home_work</mat-icon>
+          <span>إضافة مستودع جديد</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div *ngFor="let wh of erpService.warehouses()" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 hover:border-indigo-300 transition-all">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-slate-900 text-sm">{{ wh.nameAr }}</h4>
+                <span *ngIf="wh.isDefault" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800">
+                  افتراضي
+                </span>
+              </div>
+              <span class="text-xs font-mono text-slate-500">{{ wh.code }}</span>
+            </div>
+            <button (click)="openEditWarehouse(wh)" class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg">
+              <mat-icon class="text-sm">edit</mat-icon>
+            </button>
+          </div>
+
+          <div class="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-xs text-slate-400">place</mat-icon>
+              <span>{{ wh.location }}</span>
+            </div>
+            <div *ngIf="wh.managerName" class="flex items-center gap-2">
+              <mat-icon class="text-xs text-slate-400">person</mat-icon>
+              <span>أمين المستودع: {{ wh.managerName }}</span>
+            </div>
+            <div *ngIf="wh.phone" class="flex items-center gap-2">
+              <mat-icon class="text-xs text-slate-400">phone</mat-icon>
+              <span dir="ltr">{{ wh.phone }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="space-y-4 pt-4 border-t border-slate-200">
+      <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">فئات وتصنيفات الأصناف (Product Categories)</h3>
+          <p class="text-xs text-slate-500">هيكلة دليل المنتجات والخدمات والمستهلكات</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngFor="let cat of erpService.categories()" class="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">
+              <mat-icon class="text-base">category</mat-icon>
+            </div>
+            <div>
+              <span class="font-bold text-slate-800 text-sm block">{{ cat.nameAr }}</span>
+              <span class="text-xs text-slate-500">{{ cat.description || cat.nameEn }}</span>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold text-xs">
+            {{ cat.itemCount }} صنف
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CUSTOMER ==================== -->
+  <div *ngIf="showCustomerModal()" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-indigo-400">person_add</mat-icon>
+          <h3 class="font-bold text-base">{{ isEditCustomer() ? 'تعديل بيانات العميل' : 'إضافة عميل جديد' }}</h3>
+        </div>
+        <button (click)="showCustomerModal.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-right">
+        <!-- Basic Info -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">كود العميل *</label>
+            <input type="text" [(ngModel)]="currentCustomer.code" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم التجاري (عربي) *</label>
+            <input type="text" [(ngModel)]="currentCustomer.nameAr" placeholder="مثال: شركة النماء التجارية" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الرقم الضريبي (15 رقم وفق هيئة الزكاة)</label>
+            <input type="text" [(ngModel)]="currentCustomer.vatNumber" placeholder="300XXXXXXXXXXX3" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">السجل التجاري (CR Number)</label>
+            <input type="text" [(ngModel)]="currentCustomer.crNumber" placeholder="1010XXXXXX" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الهاتف / الجوال *</label>
+            <input type="text" [(ngModel)]="currentCustomer.phone" placeholder="+966 5X XXX XXXX" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">البريد الإلكتروني</label>
+            <input type="email" [(ngModel)]="currentCustomer.email" placeholder="accounting@domain.sa" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">المسؤول / جهة الاتصال</label>
+            <input type="text" [(ngModel)]="currentCustomer.contactPerson" placeholder="أ. أحمد السالم" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+        </div>
+
+        <!-- Address Info (National Address for ZATCA) -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <span class="text-xs font-bold text-slate-800 block">العنوان الوطني (مطلوب للفواتير الضريبية B2B)</span>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">المدينة</label>
+              <input type="text" [(ngModel)]="currentCustomer.city" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">الحي</label>
+              <input type="text" [(ngModel)]="currentCustomer.district" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">الشارع</label>
+              <input type="text" [(ngModel)]="currentCustomer.street" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">رقم المبنى</label>
+              <input type="text" [(ngModel)]="currentCustomer.buildingNo" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial & Credit Terms -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">حد الائتمان الأقصى (ر.س)</label>
+            <input type="number" [(ngModel)]="currentCustomer.creditLimit" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">فترة السداد الممنوحة (بالأيام)</label>
+            <input type="number" [(ngModel)]="currentCustomer.creditPeriodDays" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الرصيد الافتتاحي (ر.س)</label>
+            <input type="number" [(ngModel)]="currentCustomer.openingBalance" [disabled]="isEditCustomer()" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ملاحظات إضافية</label>
+          <textarea [(ngModel)]="currentCustomer.notes" rows="2" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg"></textarea>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <button
+          *ngIf="isEditCustomer() && currentCustomer.id"
+          (click)="deleteCustomer(currentCustomer.id); showCustomerModal.set(false)"
+          class="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+          حذف العميل
+        </button>
+        <div class="flex items-center gap-2 mr-auto">
+          <button (click)="showCustomerModal.set(false)" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl">
+            إلغاء
+          </button>
+          <button (click)="saveCustomer()" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs">
+            حفظ العميل
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: SUPPLIER ==================== -->
+  <div *ngIf="showSupplierModal()" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-indigo-400">local_shipping</mat-icon>
+          <h3 class="font-bold text-base">{{ isEditSupplier() ? 'تعديل بيانات المورد' : 'إضافة مورد جديد' }}</h3>
+        </div>
+        <button (click)="showSupplierModal.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-right">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">كود المورد *</label>
+            <input type="text" [(ngModel)]="currentSupplier.code" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المورد / الشركة *</label>
+            <input type="text" [(ngModel)]="currentSupplier.nameAr" placeholder="مثال: مصنع الشرق للأجهزة" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الرقم الضريبي</label>
+            <input type="text" [(ngModel)]="currentSupplier.vatNumber" placeholder="3XXXXXXXXXXXXX3" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">رقم الهاتف / الاتصال</label>
+            <input type="text" [(ngModel)]="currentSupplier.phone" placeholder="+966 11 XXX XXXX" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+        </div>
+
+        <!-- Bank Details for Payments -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <span class="text-xs font-bold text-slate-800 block">بيانات التحويل البنكي للمورد (لسندات الصرف)</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">اسم البنك</label>
+              <input type="text" [(ngModel)]="currentSupplier.bankName" placeholder="مصرف الراجحي / البنك الأهلي" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-[11px] text-slate-600 mb-1">رقم الآيبان الدولي (IBAN)</label>
+              <input type="text" [(ngModel)]="currentSupplier.iban" placeholder="SAXXXXXXXXXXXXXXXXXXXXXXXX" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded font-mono" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">فترة السداد المتفق عليها (أيام)</label>
+            <input type="number" [(ngModel)]="currentSupplier.paymentTermsDays" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الرصيد الافتتاحي (ر.س)</label>
+            <input type="number" [(ngModel)]="currentSupplier.openingBalance" [disabled]="isEditSupplier()" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ملاحظات التوريد</label>
+          <textarea [(ngModel)]="currentSupplier.notes" rows="2" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg"></textarea>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <button
+          *ngIf="isEditSupplier() && currentSupplier.id"
+          (click)="deleteSupplier(currentSupplier.id); showSupplierModal.set(false)"
+          class="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+          حذف المورد
+        </button>
+        <div class="flex items-center gap-2 mr-auto">
+          <button (click)="showSupplierModal.set(false)" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl">
+            إلغاء
+          </button>
+          <button (click)="saveSupplier()" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs">
+            حفظ المورد
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: PRODUCT / ITEM ==================== -->
+  <div *ngIf="showProductModal()" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <mat-icon class="text-indigo-400">inventory_2</mat-icon>
+          <h3 class="font-bold text-base">{{ isEditProduct() ? 'تعديل بيانات الصنف' : 'تعريف صنف جديد بالمخزون' }}</h3>
+        </div>
+        <button (click)="showProductModal.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-right">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">رمز الصنف (SKU) *</label>
+            <input type="text" [(ngModel)]="currentProduct.sku" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الباركود الدولي (Barcode)</label>
+            <input type="text" [(ngModel)]="currentProduct.barcode" placeholder="628XXXXXXXXX" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الصنف (عربي) *</label>
+            <input type="text" [(ngModel)]="currentProduct.nameAr" placeholder="مثال: جهاز نقطة بيع إلكترونية" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم بالإنجليزي</label>
+            <input type="text" [(ngModel)]="currentProduct.nameEn" placeholder="POS Terminal Device" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-left" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">فئة الصنف</label>
+            <select [(ngModel)]="currentProduct.category" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg">
+              <option *ngFor="let cat of erpService.categories()" [value]="cat.nameAr">
+                {{ cat.nameAr }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">وحدة القياس</label>
+            <select [(ngModel)]="currentProduct.unit" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg">
+              <option *ngFor="let u of erpService.units()" [value]="u.nameAr">
+                {{ u.nameAr }} ({{ u.code }})
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Costing & Pricing -->
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <span class="text-xs font-bold text-slate-800 block">التسعير ومتوسط التكلفة المرجح (Moving Average)</span>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">سعر البيع الافتراضي (ر.س)</label>
+              <input type="number" [(ngModel)]="currentProduct.sellingPrice" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded font-bold text-indigo-700" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">سعر الشراء الأخير (ر.س)</label>
+              <input type="number" [(ngModel)]="currentProduct.lastPurchaseCost" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded font-mono" />
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-600 mb-1">متوسط التكلفة المرجح (ر.س)</label>
+              <input type="number" [(ngModel)]="currentProduct.averageCost" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded font-bold text-slate-700" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">الرصيد الافتتاحي بالمخزن</label>
+            <input type="number" [(ngModel)]="currentProduct.currentStock" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">حد إعادة الطلب (تنبيه النقص)</label>
+            <input type="number" [(ngModel)]="currentProduct.minStockLevel" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">نسبة الضريبة (%)</label>
+            <input type="number" [(ngModel)]="currentProduct.vatRate" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+          </div>
+        </div>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <button
+          *ngIf="isEditProduct() && currentProduct.id"
+          (click)="deleteProduct(currentProduct.id); showProductModal.set(false)"
+          class="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+          حذف الصنف
+        </button>
+        <div class="flex items-center gap-2 mr-auto">
+          <button (click)="showProductModal.set(false)" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl">
+            إلغاء
+          </button>
+          <button (click)="saveProduct()" class="px-5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs">
+            حفظ بيانات الصنف
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: UNIT OF MEASURE ==================== -->
+  <div *ngIf="showUnitModal()" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">{{ isEditUnit() ? 'تعديل وحدة قياس' : 'إضافة وحدة قياس جديدة' }}</h3>
+        <button (click)="showUnitModal.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-3 text-right">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">رمز الوحدة الدولي (مثال: PCS, BOX, KG) *</label>
+          <input type="text" [(ngModel)]="currentUnit.code" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg uppercase font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الوحدة بالعربي *</label>
+          <input type="text" [(ngModel)]="currentUnit.nameAr" placeholder="مثال: كرتون 24 حبة" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">معامل التحويل (كم حبة تحتوي الوحدة؟)</label>
+          <input type="number" [(ngModel)]="currentUnit.conversionFactor" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div class="flex items-center gap-2 pt-2">
+          <input type="checkbox" id="isBaseUnit" [(ngModel)]="currentUnit.isBaseUnit" class="rounded text-indigo-600" />
+          <label for="isBaseUnit" class="text-xs font-semibold text-slate-700">هذه هي الوحدة الأساسية (المعامل = 1)</label>
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button (click)="showUnitModal.set(false)" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl">إلغاء</button>
+        <button (click)="saveUnit()" class="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-xl">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CURRENCY ==================== -->
+  <div *ngIf="showCurrencyModal()" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">{{ isEditCurrency() ? 'تعديل عملة' : 'إضافة عملة جديدة' }}</h3>
+        <button (click)="showCurrencyModal.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-3 text-right">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">رمز العملة (ISO Code مثل USD, EUR) *</label>
+          <input type="text" [(ngModel)]="currentCurrency.code" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg uppercase font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">اسم العملة بالعربي *</label>
+          <input type="text" [(ngModel)]="currentCurrency.nameAr" placeholder="مثال: يوان صيني" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">رمز العملة (Symbol)</label>
+          <input type="text" [(ngModel)]="currentCurrency.symbol" placeholder="¥" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">سعر الصرف مقابل الريال السعودي (SAR)</label>
+          <input type="number" step="0.0001" [(ngModel)]="currentCurrency.exchangeRate" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button (click)="showCurrencyModal.set(false)" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl">إلغاء</button>
+        <button (click)="saveCurrency()" class="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-xl">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: PAYMENT METHOD ==================== -->
+  <div *ngIf="showPaymentModal()" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">{{ isEditPayment() ? 'تعديل طريقة دفع' : 'إضافة طريقة دفع جديدة' }}</h3>
+        <button (click)="showPaymentModal.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-3 text-right">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">رمز طريقة الدفع *</label>
+          <input type="text" [(ngModel)]="currentPayment.code" placeholder="pos_mada / credit_card" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">الاسم بالعربي *</label>
+          <input type="text" [(ngModel)]="currentPayment.nameAr" placeholder="نقاط بيع مدى" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">الحساب المالي المرتبط (رقم الحساب بالشجرة)</label>
+          <input type="text" [(ngModel)]="currentPayment.linkedAccountCode" placeholder="1112" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">اسم الحساب المرتبط</label>
+          <input type="text" [(ngModel)]="currentPayment.linkedAccountName" placeholder="مصرف الراجحي - الحساب الجاري" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">نسبة العمولة البنكية (%)</label>
+          <input type="number" step="0.01" [(ngModel)]="currentPayment.commissionPercent" placeholder="0.8" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button (click)="showPaymentModal.set(false)" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl">إلغاء</button>
+        <button (click)="savePaymentMethod()" class="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-xl">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: WAREHOUSE ==================== -->
+  <div *ngIf="showWarehouseModal()" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <h3 class="font-bold text-sm">{{ isEditWarehouse() ? 'تعديل مستودع' : 'إضافة مستودع جديد' }}</h3>
+        <button (click)="showWarehouseModal.set(false)" class="text-slate-400 hover:text-white">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-3 text-right">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">كود المستودع *</label>
+          <input type="text" [(ngModel)]="currentWarehouse.code" placeholder="WH-04" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg font-mono" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">اسم المستودع بالعربي *</label>
+          <input type="text" [(ngModel)]="currentWarehouse.nameAr" placeholder="مستودع فرع القصيم" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">الموقع / العنوان</label>
+          <input type="text" [(ngModel)]="currentWarehouse.location" placeholder="بريدة، المنطقة الصناعية" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">أمين المستودع</label>
+          <input type="text" [(ngModel)]="currentWarehouse.managerName" placeholder="أ. خالد العتيبي" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg" />
+        </div>
+      </div>
+
+      <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button (click)="showWarehouseModal.set(false)" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl">إلغاء</button>
+        <button (click)="saveWarehouse()" class="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-xl">حفظ</button>
+      </div>
+    </div>
+  </div>
+</div>

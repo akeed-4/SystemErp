@@ -1,0 +1,286 @@
+<div class="space-y-6">
+  <!-- Header Bar -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+    <div>
+      <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+        <span class="material-icons text-indigo-600">receipt_long</span>
+        <span>إدارة سندات القبض والصرف المالي</span>
+      </h2>
+      <p class="text-xs text-slate-500 mt-1">
+        سندات قبض نقدية وبنكية، سندات صرف للموردين والمصروفات، تفقيط آلي بالريال السعودي، وتوليد قيود اليومية.
+      </p>
+    </div>
+
+    <!-- Actions: New Receipt or New Payment -->
+    <div class="flex items-center gap-2">
+      <button
+        id="btn-new-receipt-voucher"
+        type="button"
+        (click)="openCreateModal('receipt')"
+        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+      >
+        <span class="material-icons text-sm">arrow_downward</span>
+        <span>سند قبض جديد (+)</span>
+      </button>
+
+      <button
+        id="btn-new-payment-voucher"
+        type="button"
+        (click)="openCreateModal('payment')"
+        class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+      >
+        <span class="material-icons text-sm">arrow_upward</span>
+        <span>سند صرف جديد (-)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Tabs (All, Receipt, Payment) -->
+  <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+    <button
+      id="tab-vouchers-all"
+      type="button"
+      (click)="filterType.set('all')"
+      [class.bg-indigo-600]="filterType() === 'all'"
+      [class.text-white]="filterType() === 'all'"
+      [class.bg-white]="filterType() !== 'all'"
+      [class.text-slate-700]="filterType() !== 'all'"
+      class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 transition-colors shadow-2xs"
+    >
+      جميع السندات ({{ erpService.vouchers().length }})
+    </button>
+
+    <button
+      id="tab-vouchers-receipt"
+      type="button"
+      (click)="filterType.set('receipt')"
+      [class.bg-emerald-600]="filterType() === 'receipt'"
+      [class.text-white]="filterType() === 'receipt'"
+      [class.bg-white]="filterType() !== 'receipt'"
+      [class.text-slate-700]="filterType() !== 'receipt'"
+      class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 transition-colors shadow-2xs flex items-center gap-1"
+    >
+      <span class="material-icons text-xs">arrow_downward</span>
+      <span>سندات القبض</span>
+    </button>
+
+    <button
+      id="tab-vouchers-payment"
+      type="button"
+      (click)="filterType.set('payment')"
+      [class.bg-rose-600]="filterType() === 'payment'"
+      [class.text-white]="filterType() === 'payment'"
+      [class.bg-white]="filterType() !== 'payment'"
+      [class.text-slate-700]="filterType() !== 'payment'"
+      class="px-3.5 py-1.5 rounded-lg text-xs font-bold border border-slate-200 transition-colors shadow-2xs flex items-center gap-1"
+    >
+      <span class="material-icons text-xs">arrow_upward</span>
+      <span>سندات الصرف</span>
+    </button>
+  </div>
+
+  <!-- Vouchers Shared DataGrid -->
+  <app-data-grid
+    [title]="filterType() === 'receipt' ? 'سجل سندات القبض' : filterType() === 'payment' ? 'سجل سندات الصرف' : 'سجل السندات المالية'"
+    [subtitle]="'انقر على أي صف لمعاينة وطباعة السند المالي الرسمي'"
+    [columns]="columns"
+    [data]="filteredVouchers()"
+    mobileCardTitleField="voucherNumber"
+    mobileCardSubtitleField="partyName"
+    mobileCardBadgeField="amount"
+    (rowClick)="openVoucherPrint($event)"
+  >
+  </app-data-grid>
+
+  <!-- Create Voucher Modal -->
+  <div *ngIf="showCreateModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] flex flex-col overflow-hidden my-auto border border-slate-200">
+      <!-- Modal Header -->
+      <div
+        class="p-4 border-b border-slate-200 flex items-center justify-between"
+        [ngClass]="formType === 'receipt' ? 'bg-emerald-50 text-emerald-950' : 'bg-rose-50 text-rose-950'"
+      >
+        <div class="flex items-center gap-2">
+          <span class="material-icons">{{ formType === 'receipt' ? 'arrow_downward' : 'arrow_upward' }}</span>
+          <h3 class="font-bold text-sm">
+            {{ formType === 'receipt' ? 'إصدار سند قبض مالي جديد' : 'إصدار سند صرف مالي جديد' }}
+          </h3>
+        </div>
+        <button (click)="showCreateModal.set(false)" class="text-slate-400 hover:text-slate-600 p-1">
+          <span class="material-icons text-base">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto space-y-4 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Voucher Type Selector -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">نوع السند</label>
+            <select
+              [(ngModel)]="formType"
+              class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-bold"
+            >
+              <option value="receipt">سند قبض (استلام أموال من عميل أو جهة)</option>
+              <option value="payment">سند صرف (دفع أموال لمورد أو مصروف)</option>
+            </select>
+          </div>
+
+          <!-- Amount in figures -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">المبلغ المالي (ر.س) *</label>
+            <input
+              id="input-voucher-amount"
+              type="number"
+              min="1"
+              [(ngModel)]="formAmount"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-900 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
+        <!-- Dynamic Live Arabic Tafqeet Box -->
+        <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl">
+          <span class="text-[11px] font-semibold text-indigo-900 block mb-0.5">المبلغ كتابةً باللغة العربية (تفقيط معتمد):</span>
+          <p class="font-bold text-indigo-950 font-sans text-xs bg-white p-2 rounded border border-indigo-100">
+            {{ liveTafqeet }}
+          </p>
+        </div>
+
+        <!-- Party Info & Accounts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">
+              {{ formType === 'receipt' ? 'اسم الطرف المستلم منه (العميل) *' : 'اسم المستفيد / المصروف له *' }}
+            </label>
+            <input
+              id="input-voucher-party"
+              type="text"
+              [(ngModel)]="formPartyName"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+              placeholder="مثال: شركة التطوير الحديث"
+            />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">طريقة الدفع</label>
+            <select
+              id="select-voucher-payment-method"
+              [(ngModel)]="formPaymentMethod"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="bank_transfer">تحويل بنكي</option>
+              <option value="cash">نقداً (كاش)</option>
+              <option value="cheque">شيك مصرفي</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">
+              {{ formType === 'receipt' ? 'الحساب الدائن (العميل / الإيراد)' : 'الحساب المدين (المورد / المصروف)' }}
+            </label>
+            <select
+              id="select-party-account"
+              [(ngModel)]="formPartyAccountCode"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+            >
+              <option *ngFor="let acc of erpService.accounts()" [value]="acc.code">
+                {{ acc.code }} - {{ acc.nameAr }}
+              </option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">حساب الخزينة / البنك المتأثر</label>
+            <select
+              id="select-treasury-account"
+              [(ngModel)]="formTreasuryAccountCode"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+            >
+              <option value="1112">1112 - مصرف الراجحي - الحساب الجاري</option>
+              <option value="1111">1111 - الصندوق الرئيسي (كاش)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">رقم المرجع (رقم الحوالة أو الشيك)</label>
+            <input
+              id="input-voucher-ref"
+              type="text"
+              [(ngModel)]="formReferenceNumber"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono focus:ring-1 focus:ring-indigo-500"
+              placeholder="مثال: REF-998877"
+            />
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">اسم المحاسب / أمين الصندوق</label>
+            <input
+              id="input-voucher-clerk"
+              type="text"
+              [(ngModel)]="formReceivedOrPaidBy"
+              class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">البيان / وذلك عن</label>
+          <textarea
+            id="input-voucher-notes"
+            rows="2"
+            [(ngModel)]="formNotes"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500"
+            placeholder="اكتب تفاصيل سبب القبض أو الصرف..."
+          ></textarea>
+        </div>
+
+        <!-- Automatic Journal Entry Preview -->
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px] text-slate-600">
+          <span class="font-bold text-slate-800 block mb-1">القيد المحاسبي المزدوج المتولد آلياً:</span>
+          <div *ngIf="formType === 'receipt'">
+            • من حـ/ الخزينة أو البنك ({{ formTreasuryAccountCode }}) مدين بمبلغ {{ formAmount }} ر.س<br>
+            • إلى حـ/ الطرف المستلم منه ({{ formPartyAccountCode }}) دائن بمبلغ {{ formAmount }} ر.س
+          </div>
+          <div *ngIf="formType === 'payment'">
+            • من حـ/ المستفيد أو المصروف ({{ formPartyAccountCode }}) مدين بمبلغ {{ formAmount }} ر.س<br>
+            • إلى حـ/ الخزينة أو البنك ({{ formTreasuryAccountCode }}) دائن بمبلغ {{ formAmount }} ر.س
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-100 border-t border-slate-200 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          (click)="showCreateModal.set(false)"
+          class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-50"
+        >
+          إلغاء
+        </button>
+
+        <button
+          id="btn-save-voucher"
+          type="button"
+          (click)="saveVoucher()"
+          [class.bg-emerald-600]="formType === 'receipt'"
+          [class.hover:bg-emerald-700]="formType === 'receipt'"
+          [class.bg-rose-600]="formType === 'payment'"
+          [class.hover:bg-rose-700]="formType === 'payment'"
+          class="px-5 py-2 text-white rounded-lg text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
+        >
+          <span class="material-icons text-sm">check_circle</span>
+          <span>حفظ السند وتوليد القيد المحاسبي</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print Voucher Modal -->
+<app-voucher-print
+  *ngIf="selectedVoucher()"
+  [voucher]="selectedVoucher()!"
+  [tenant]="erpService.activeTenant()"
+  (close)="selectedVoucher.set(null)"
+></app-voucher-print>

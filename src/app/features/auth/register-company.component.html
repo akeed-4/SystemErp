@@ -1,0 +1,854 @@
+<div class="min-h-screen bg-slate-950 py-10 px-4 sm:px-6 lg:px-8 text-slate-100 relative" [attr.dir]="i18n.currentDir()">
+  <!-- Top Navigation & Brand -->
+  <div class="max-w-5xl mx-auto flex items-center justify-between mb-8">
+    <a routerLink="/dashboard" class="inline-flex items-center gap-2.5 group">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
+        <mat-icon class="text-xl">account_balance</mat-icon>
+      </div>
+      <div>
+        <span class="font-black text-lg text-white block leading-tight">{{ i18n.isArabic() ? 'نظام الراية المحاسبي' : 'Al-Raya ERP' }}</span>
+        <span class="text-xs text-indigo-300 font-mono">{{ i18n.isArabic() ? 'تسجيل منشأة جديدة وتفعيل الاشتراكات' : 'New Company Registration & Subscriptions' }}</span>
+      </div>
+    </a>
+
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-slate-400 hidden sm:inline">
+        {{ i18n.isArabic() ? 'لديك حساب بالفعل؟' : 'Already have an account?' }}
+      </span>
+      <a
+        routerLink="/login"
+        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-slate-200 hover:text-white hover:bg-slate-800 transition-colors"
+      >
+        <mat-icon class="text-sm">login</mat-icon>
+        <span>{{ i18n.isArabic() ? 'تسجيل الدخول' : 'Sign In' }}</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="max-w-5xl mx-auto">
+    <!-- SUCCESS SCREEN -->
+    @if (registrationResult(); as res) {
+      <div class="bg-slate-900 border border-emerald-500/40 rounded-3xl p-8 sm:p-12 text-center shadow-2xl animate-fadeIn">
+        <div class="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto mb-6 shadow-inner">
+          <mat-icon class="text-4xl">check_circle</mat-icon>
+        </div>
+
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-3">
+          {{ i18n.isArabic() ? 'تم تفعيل الاشتراك والمنشأة بنجاح!' : 'Company & Subscription Activated!' }}
+        </span>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-white mb-2">
+          {{ res.companyName }}
+        </h1>
+        <p class="text-sm text-slate-300 max-w-xl mx-auto mb-8">
+          {{ res.message }}
+        </p>
+
+        <!-- Subscription summary card -->
+        <div class="max-w-md mx-auto bg-slate-950/80 border border-slate-800 rounded-2xl p-5 text-start space-y-3 mb-8 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-slate-400">{{ i18n.isArabic() ? 'معرّف المستأجر الجديد (Tenant ID):' : 'Tenant ID:' }}</span>
+            <span class="font-mono font-bold text-indigo-400">{{ res.tenantId }}</span>
+          </div>
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-slate-400">{{ i18n.isArabic() ? 'الباقة المفعلة:' : 'Active Plan:' }}</span>
+            <span class="font-bold text-emerald-400">{{ selectedPlan().nameAr }}</span>
+          </div>
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-slate-400">{{ i18n.isArabic() ? 'دورة السداد:' : 'Billing Cycle:' }}</span>
+            <span class="font-bold text-white">{{ billingCycle() === 'yearly' ? 'سنوي (خصم شهرين مجاناً)' : 'شهري' }}</span>
+          </div>
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-slate-400">{{ i18n.isArabic() ? 'الربط الضريبي ZATCA:' : 'ZATCA Integration:' }}</span>
+            <span class="font-bold text-cyan-400">{{ i18n.isArabic() ? 'مفعل وجاهز للمرحلة الثانية' : 'Active & Ready Phase 2' }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">{{ i18n.isArabic() ? 'شجرة الحسابات:' : 'Chart of Accounts:' }}</span>
+            <span class="font-bold text-emerald-400">{{ i18n.isArabic() ? 'تم توليدها تلقائياً للمنشأة' : 'Auto-generated' }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            type="button"
+            (click)="navigateToDashboard()"
+            class="w-full sm:w-auto px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <mat-icon class="text-lg">dashboard</mat-icon>
+            <span>{{ i18n.isArabic() ? 'الدخول إلى لوحة التحكم وبدء العمل' : 'Go to Dashboard & Start' }}</span>
+          </button>
+
+          <a
+            routerLink="/sales"
+            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-all flex items-center justify-center gap-2"
+          >
+            <mat-icon class="text-lg">add_shopping_cart</mat-icon>
+            <span>{{ i18n.isArabic() ? 'إصدار أول فاتورة مبيعات ZATCA' : 'Create First ZATCA Invoice' }}</span>
+          </a>
+        </div>
+      </div>
+    } @else {
+      <!-- STEPPER WIZARD -->
+      <!-- Step Indicators Bar -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-8">
+        <div class="grid grid-cols-4 gap-2 text-center text-xs">
+          <!-- Step 1 -->
+          <button
+            type="button"
+            (click)="goToStep(1)"
+            class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition-all cursor-pointer"
+            [class.bg-indigo-600]="currentStep() === 1"
+            [class.text-white]="currentStep() === 1"
+            [class.text-slate-400]="currentStep() !== 1"
+          >
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                 [class.bg-white]="currentStep() === 1"
+                 [class.text-indigo-900]="currentStep() === 1"
+                 [class.bg-slate-800]="currentStep() !== 1"
+                 [class.text-slate-300]="currentStep() !== 1">
+              1
+            </div>
+            <span class="font-bold text-[11px] sm:text-xs">{{ i18n.isArabic() ? 'اختيار الباقة' : 'Select Plan' }}</span>
+          </button>
+
+          <!-- Step 2 -->
+          <button
+            type="button"
+            (click)="goToStep(2)"
+            class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition-all cursor-pointer"
+            [class.bg-indigo-600]="currentStep() === 2"
+            [class.text-white]="currentStep() === 2"
+            [class.text-slate-400]="currentStep() !== 2"
+          >
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                 [class.bg-white]="currentStep() === 2"
+                 [class.text-indigo-900]="currentStep() === 2"
+                 [class.bg-slate-800]="currentStep() !== 2"
+                 [class.text-slate-300]="currentStep() !== 2">
+              2
+            </div>
+            <span class="font-bold text-[11px] sm:text-xs">{{ i18n.isArabic() ? 'بيانات المنشأة' : 'Company Info' }}</span>
+          </button>
+
+          <!-- Step 3 -->
+          <button
+            type="button"
+            (click)="goToStep(3)"
+            class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition-all cursor-pointer"
+            [class.bg-indigo-600]="currentStep() === 3"
+            [class.text-white]="currentStep() === 3"
+            [class.text-slate-400]="currentStep() !== 3"
+          >
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                 [class.bg-white]="currentStep() === 3"
+                 [class.text-indigo-900]="currentStep() === 3"
+                 [class.bg-slate-800]="currentStep() !== 3"
+                 [class.text-slate-300]="currentStep() !== 3">
+              3
+            </div>
+            <span class="font-bold text-[11px] sm:text-xs">{{ i18n.isArabic() ? 'حساب المدير' : 'Admin Account' }}</span>
+          </button>
+
+          <!-- Step 4 -->
+          <button
+            type="button"
+            (click)="goToStep(4)"
+            class="flex flex-col sm:flex-row items-center justify-center gap-2 p-2 rounded-xl transition-all cursor-pointer"
+            [class.bg-indigo-600]="currentStep() === 4"
+            [class.text-white]="currentStep() === 4"
+            [class.text-slate-400]="currentStep() !== 4"
+          >
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                 [class.bg-white]="currentStep() === 4"
+                 [class.text-indigo-900]="currentStep() === 4"
+                 [class.bg-slate-800]="currentStep() !== 4"
+                 [class.text-slate-300]="currentStep() !== 4">
+              4
+            </div>
+            <span class="font-bold text-[11px] sm:text-xs">{{ i18n.isArabic() ? 'الدفع والتفعيل' : 'Payment' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Global Error Alert -->
+      @if (errorMessage()) {
+        <div class="mb-6 p-4 rounded-2xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs flex items-center gap-3 animate-fadeIn">
+          <mat-icon class="text-rose-400 text-xl">error_outline</mat-icon>
+          <span class="leading-relaxed">{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- STEP 1: PACKAGES AND SUBSCRIPTION PLANS -->
+      @if (currentStep() === 1) {
+        <div class="space-y-6">
+          <div class="text-center max-w-2xl mx-auto">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-3">
+              {{ i18n.isArabic() ? 'الخطوة 1 من 4: الباقات والاشتراكات السحابية' : 'Step 1 of 4: Packages & Cloud Subscriptions' }}
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-black text-white">
+              {{ i18n.isArabic() ? 'اختر الباقة المناسبة لحجم ونشاط منشأتك' : 'Choose the right package for your company' }}
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-2">
+              {{ i18n.isArabic() ? 'جميع الباقات تشمل الفوترة الإلكترونية المعتمدة للمرحلة الثانية من هيئة الزكاة والضريبة والجمارك' : 'All plans include approved ZATCA Phase 2 E-Invoicing' }}
+            </p>
+
+            <!-- Monthly / Yearly Switcher -->
+            <div class="mt-6 inline-flex items-center bg-slate-900 border border-slate-800 p-1.5 rounded-2xl">
+              <button
+                type="button"
+                (click)="setBillingCycle('monthly')"
+                class="px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                [class.bg-indigo-600]="billingCycle() === 'monthly'"
+                [class.text-white]="billingCycle() === 'monthly'"
+                [class.text-slate-400]="billingCycle() !== 'monthly'"
+              >
+                {{ i18n.isArabic() ? 'اشتراك شهري' : 'Monthly' }}
+              </button>
+              <button
+                type="button"
+                (click)="setBillingCycle('yearly')"
+                class="px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                [class.bg-indigo-600]="billingCycle() === 'yearly'"
+                [class.text-white]="billingCycle() === 'yearly'"
+                [class.text-slate-400]="billingCycle() !== 'yearly'"
+              >
+                <span>{{ i18n.isArabic() ? 'اشتراك سنوي' : 'Yearly' }}</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-500 text-slate-950 font-black">
+                  {{ i18n.isArabic() ? 'وفر شهرين' : 'Save 2 Mo' }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Plans Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            @for (plan of plans(); track plan.id) {
+              <div
+                (click)="selectPlan(plan.id)"
+                class="relative bg-slate-900 border rounded-3xl p-6 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:scale-[1.01]"
+                [class.border-indigo-500]="selectedPlanId() === plan.id"
+                [class.ring-2]="selectedPlanId() === plan.id"
+                [class.ring-indigo-500/50]="selectedPlanId() === plan.id"
+                [class.border-slate-800]="selectedPlanId() !== plan.id"
+                [class.bg-slate-900]="selectedPlanId() !== plan.id"
+                [class.shadow-2xl]="selectedPlanId() === plan.id"
+              >
+                <!-- Popular Badge if any -->
+                @if (plan.isPopular) {
+                  <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md">
+                    {{ plan.badgeAr }}
+                  </div>
+                }
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-base font-black text-white">{{ plan.nameAr }}</h3>
+                    <div
+                      class="w-5 h-5 rounded-full border flex items-center justify-center transition-colors"
+                      [class.bg-indigo-600]="selectedPlanId() === plan.id"
+                      [class.border-indigo-500]="selectedPlanId() === plan.id"
+                      [class.border-slate-700]="selectedPlanId() !== plan.id"
+                    >
+                      @if (selectedPlanId() === plan.id) {
+                        <mat-icon class="text-white text-xs">check</mat-icon>
+                      }
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-slate-400 min-h-[38px] leading-relaxed mb-4">
+                    {{ plan.descriptionAr }}
+                  </p>
+
+                  <!-- Price Tag -->
+                  <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-4 mb-5 text-center">
+                    <div class="flex items-baseline justify-center gap-1">
+                      <span class="text-3xl font-black text-white">
+                        {{ billingCycle() === 'yearly' ? plan.priceYearly : plan.priceMonthly }}
+                      </span>
+                      <span class="text-xs text-slate-400 font-bold">ر.س</span>
+                      <span class="text-xs text-slate-500">
+                        {{ billingCycle() === 'yearly' ? '/سنوياً' : '/شهرياً' }}
+                      </span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 mt-1">
+                      + 15% ضريبة القيمة المضافة
+                    </div>
+                  </div>
+
+                  <!-- Quick Stats -->
+                  <div class="grid grid-cols-2 gap-2 mb-5 text-[11px]">
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center">
+                      <span class="text-slate-400 block">{{ i18n.isArabic() ? 'المستخدمين' : 'Users' }}</span>
+                      <span class="font-bold text-indigo-300">{{ plan.maxUsers === 'unlimited' ? 'غير محدود' : plan.maxUsers }}</span>
+                    </div>
+                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center">
+                      <span class="text-slate-400 block">{{ i18n.isArabic() ? 'الفروع والمستودعات' : 'Branches' }}</span>
+                      <span class="font-bold text-indigo-300">{{ plan.branches === 'unlimited' ? 'غير محدود' : plan.branches }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Feature List -->
+                  <div class="space-y-2.5 text-xs text-slate-300 border-t border-slate-800 pt-4">
+                    @for (feature of plan.featuresAr; track feature) {
+                      <div class="flex items-start gap-2">
+                        <mat-icon class="text-emerald-400 text-sm shrink-0 mt-0.5">check_circle</mat-icon>
+                        <span class="leading-tight">{{ feature }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Select button inside card -->
+                <button
+                  type="button"
+                  (click)="selectPlan(plan.id)"
+                  class="mt-6 w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  [class.bg-indigo-600]="selectedPlanId() === plan.id"
+                  [class.text-white]="selectedPlanId() === plan.id"
+                  [class.bg-slate-800]="selectedPlanId() !== plan.id"
+                  [class.hover:bg-slate-700]="selectedPlanId() !== plan.id"
+                  [class.text-slate-300]="selectedPlanId() !== plan.id"
+                >
+                  {{ selectedPlanId() === plan.id ? 'الباقة المختارة حالياً' : 'اختيار هذه الباقة' }}
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Bottom Next Step Button -->
+          <div class="flex justify-end pt-4">
+            <button
+              type="button"
+              (click)="goToStep(2)"
+              class="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>{{ i18n.isArabic() ? 'متابعة إلى بيانات المنشأة' : 'Continue to Company Details' }}</span>
+              <mat-icon class="text-base">arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 2: COMPANY & TAX DETAILS -->
+      @if (currentStep() === 2) {
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 space-y-6" [formGroup]="registerForm">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-2">
+              {{ i18n.isArabic() ? 'الخطوة 2 من 4: بيانات المنشأة والسجل التجاري' : 'Step 2 of 4: Company Details & Tax Number' }}
+            </span>
+            <h2 class="text-xl font-black text-white">
+              {{ i18n.isArabic() ? 'معلومات المنشأة والامتثال لمتطلبات هيئة الزكاة (ZATCA)' : 'Company Details for ZATCA Compliance' }}
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              {{ i18n.isArabic() ? 'تستخدم هذه البيانات في ترويسة الفواتير الضريبية وتوليد الـ Cryptographic Stamp و CSID' : 'Used for tax invoice headers and CSID certificates' }}
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Company Name Arabic -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-name-ar">
+                {{ i18n.isArabic() ? 'اسم المنشأة بالعربية *' : 'Company Name (Arabic) *' }}
+              </label>
+              <input
+                id="input-reg-name-ar"
+                type="text"
+                formControlName="companyNameAr"
+                placeholder="مثال: شركة المستقبل للتقنية والتجارة"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Company Name English -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-name-en">
+                {{ i18n.isArabic() ? 'اسم المنشأة بالإنجليزية *' : 'Company Name (English) *' }}
+              </label>
+              <input
+                id="input-reg-name-en"
+                type="text"
+                formControlName="companyNameEn"
+                placeholder="Future Tech & Trade Co."
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- VAT Number -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-slate-300" for="input-reg-vat">
+                  {{ i18n.isArabic() ? 'الرقم الضريبي (15 رقم) *' : 'VAT Number (15 digits) *' }}
+                </label>
+                <span class="text-[10px] text-emerald-400 font-mono">يبدأ وينتهي بالرقم 3</span>
+              </div>
+              <input
+                id="input-reg-vat"
+                type="text"
+                maxlength="15"
+                formControlName="vatNumber"
+                placeholder="310234567800003"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              @if (registerForm.get('vatNumber')?.touched && registerForm.get('vatNumber')?.errors?.['invalidSaudiVat']) {
+                <span class="text-[11px] text-rose-400 block mt-1">الرقم الضريبي يجب أن يتكون من 15 خانة ويبدأ وينتهي بـ 3.</span>
+              }
+            </div>
+
+            <!-- CR Number -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-cr">
+                {{ i18n.isArabic() ? 'رقم السجل التجاري (10 أرقام) *' : 'Commercial Registration (CR) *' }}
+              </label>
+              <input
+                id="input-reg-cr"
+                type="text"
+                maxlength="10"
+                formControlName="crNumber"
+                placeholder="1010897654"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- City -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-city">
+                {{ i18n.isArabic() ? 'المدينة *' : 'City *' }}
+              </label>
+              <input
+                id="input-reg-city"
+                type="text"
+                formControlName="city"
+                placeholder="الرياض"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Industry -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-industry">
+                {{ i18n.isArabic() ? 'النشاط التجاري *' : 'Industry *' }}
+              </label>
+              <input
+                id="input-reg-industry"
+                type="text"
+                formControlName="industry"
+                placeholder="تجارة وتوزيع، خدمات، مقاولات"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Address -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-address">
+                {{ i18n.isArabic() ? 'العنوان الوطني / اسم الشارع والحي *' : 'National Address / Street & District *' }}
+              </label>
+              <input
+                id="input-reg-address"
+                type="text"
+                formControlName="address"
+                placeholder="طريق التخصصي، حي الملقا، مبنى 1000"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Company Phone -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-phone">
+                {{ i18n.isArabic() ? 'هاتف المنشأة *' : 'Company Phone *' }}
+              </label>
+              <input
+                id="input-reg-phone"
+                type="text"
+                formControlName="companyPhone"
+                placeholder="+966 11 234 5678"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Company Email -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-reg-email">
+                {{ i18n.isArabic() ? 'البريد الإلكتروني الرسمي *' : 'Company Email *' }}
+              </label>
+              <input
+                id="input-reg-email"
+                type="email"
+                formControlName="companyEmail"
+                placeholder="info@futuretech.com.sa"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex items-center justify-between pt-6 border-t border-slate-800">
+            <button
+              type="button"
+              (click)="goToStep(1)"
+              class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <mat-icon class="text-sm">arrow_back</mat-icon>
+              <span>{{ i18n.isArabic() ? 'العودة للباقات' : 'Back to Plans' }}</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="goToStep(3)"
+              class="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>{{ i18n.isArabic() ? 'متابعة إلى حساب المدير' : 'Continue to Admin Account' }}</span>
+              <mat-icon class="text-base">arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 3: ADMIN USER DETAILS -->
+      @if (currentStep() === 3) {
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-10 space-y-6" [formGroup]="registerForm">
+          <div>
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-2">
+              {{ i18n.isArabic() ? 'الخطوة 3 من 4: بيانات حساب المدير المسؤول' : 'Step 3 of 4: Primary Admin Account' }}
+            </span>
+            <h2 class="text-xl font-black text-white">
+              {{ i18n.isArabic() ? 'إنشاء حساب مالك المنشأة / المدير التنفيذي' : 'Create Primary Owner / Executive Account' }}
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">
+              {{ i18n.isArabic() ? 'سيتم استخدام هذا البريد الإلكتروني لتسجيل الدخول وإدارة الصلاحيات والفروع' : 'This email will be used for login and master RBAC permissions' }}
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Admin Name -->
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-admin-name">
+                {{ i18n.isArabic() ? 'اسم المسؤول الرباعي *' : 'Admin Full Name *' }}
+              </label>
+              <input
+                id="input-admin-name"
+                type="text"
+                formControlName="adminName"
+                placeholder="سلطان بن عبدالعزيز"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Admin Email -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-admin-email">
+                {{ i18n.isArabic() ? 'البريد الإلكتروني لتسجيل الدخول *' : 'Admin Login Email *' }}
+              </label>
+              <input
+                id="input-admin-email"
+                type="email"
+                formControlName="adminEmail"
+                placeholder="sultan@futuretech.com.sa"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Admin Phone -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-admin-phone">
+                {{ i18n.isArabic() ? 'رقم الجوال الشخصي *' : 'Mobile Number *' }}
+              </label>
+              <input
+                id="input-admin-phone"
+                type="text"
+                formControlName="adminPhone"
+                placeholder="+966 50 999 8877"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Password -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-admin-pass">
+                {{ i18n.isArabic() ? 'كلمة المرور *' : 'Password *' }}
+              </label>
+              <input
+                id="input-admin-pass"
+                type="password"
+                formControlName="password"
+                placeholder="••••••••••"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <!-- Confirm Password -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5" for="input-admin-confirm">
+                {{ i18n.isArabic() ? 'تأكيد كلمة المرور *' : 'Confirm Password *' }}
+              </label>
+              <input
+                id="input-admin-confirm"
+                type="password"
+                formControlName="confirmPassword"
+                placeholder="••••••••••"
+                dir="ltr"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex items-center justify-between pt-6 border-t border-slate-800">
+            <button
+              type="button"
+              (click)="goToStep(2)"
+              class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <mat-icon class="text-sm">arrow_back</mat-icon>
+              <span>{{ i18n.isArabic() ? 'السابق' : 'Previous' }}</span>
+            </button>
+
+            <button
+              type="button"
+              (click)="goToStep(4)"
+              class="px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <span>{{ i18n.isArabic() ? 'متابعة إلى بوابة الدفع والتفعيل' : 'Continue to Payment' }}</span>
+              <mat-icon class="text-base">arrow_forward</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- STEP 4: PAYMENT AND CONFIRMATION -->
+      @if (currentStep() === 4) {
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6" [formGroup]="registerForm">
+          <!-- Left Column: Payment Methods & Gateway -->
+          <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+            <div>
+              <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
+                {{ i18n.isArabic() ? 'الخطوة 4 من 4: الدفع والتفعيل الفوري' : 'Step 4 of 4: Payment & Instant Activation' }}
+              </span>
+              <h2 class="text-xl font-black text-white">
+                {{ i18n.isArabic() ? 'طرق الدفع المعتمدة' : 'Select Payment Method' }}
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">
+                {{ i18n.isArabic() ? 'دفع آمن ومشفر 100% يدعم بطاقات مدى والبطاقات الائتمانية والتحويل البنكي' : '100% secure payment supporting Mada, Credit Cards, Apple Pay' }}
+              </p>
+            </div>
+
+            <!-- Payment Methods Radios -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <!-- Mada -->
+              <button
+                type="button"
+                (click)="setPaymentMethod('mada')"
+                class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5"
+                [class.bg-indigo-600/20]="selectedPaymentMethod() === 'mada'"
+                [class.border-indigo-500]="selectedPaymentMethod() === 'mada'"
+                [class.bg-slate-950]="selectedPaymentMethod() !== 'mada'"
+                [class.border-slate-800]="selectedPaymentMethod() !== 'mada'"
+              >
+                <span class="text-base font-black text-emerald-400">mada</span>
+                <span class="text-[11px] font-bold text-white">مدى</span>
+              </button>
+
+              <!-- Credit Card -->
+              <button
+                type="button"
+                (click)="setPaymentMethod('credit_card')"
+                class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5"
+                [class.bg-indigo-600/20]="selectedPaymentMethod() === 'credit_card'"
+                [class.border-indigo-500]="selectedPaymentMethod() === 'credit_card'"
+                [class.bg-slate-950]="selectedPaymentMethod() !== 'credit_card'"
+                [class.border-slate-800]="selectedPaymentMethod() !== 'credit_card'"
+              >
+                <mat-icon class="text-indigo-400 text-lg">credit_card</mat-icon>
+                <span class="text-[11px] font-bold text-white">بطاقة ائتمان</span>
+              </button>
+
+              <!-- Apple Pay -->
+              <button
+                type="button"
+                (click)="setPaymentMethod('apple_pay')"
+                class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5"
+                [class.bg-indigo-600/20]="selectedPaymentMethod() === 'apple_pay'"
+                [class.border-indigo-500]="selectedPaymentMethod() === 'apple_pay'"
+                [class.bg-slate-950]="selectedPaymentMethod() !== 'apple_pay'"
+                [class.border-slate-800]="selectedPaymentMethod() !== 'apple_pay'"
+              >
+                <span class="text-base font-bold text-slate-200"> Pay</span>
+                <span class="text-[11px] font-bold text-white">Apple Pay</span>
+              </button>
+
+              <!-- Bank Transfer -->
+              <button
+                type="button"
+                (click)="setPaymentMethod('bank_transfer')"
+                class="p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5"
+                [class.bg-indigo-600/20]="selectedPaymentMethod() === 'bank_transfer'"
+                [class.border-indigo-500]="selectedPaymentMethod() === 'bank_transfer'"
+                [class.bg-slate-950]="selectedPaymentMethod() !== 'bank_transfer'"
+                [class.border-slate-800]="selectedPaymentMethod() !== 'bank_transfer'"
+              >
+                <mat-icon class="text-amber-400 text-lg">account_balance</mat-icon>
+                <span class="text-[11px] font-bold text-white">تحويل بنكي</span>
+              </button>
+            </div>
+
+            <!-- Simulated Card Input Fields -->
+            @if (selectedPaymentMethod() === 'mada' || selectedPaymentMethod() === 'credit_card') {
+              <div class="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-400 mb-1" for="input-card-num">
+                    {{ i18n.isArabic() ? 'رقم البطاقة (تجريبي)' : 'Card Number (Mock)' }}
+                  </label>
+                  <input
+                    id="input-card-num"
+                    type="text"
+                    formControlName="cardNumber"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                    dir="ltr"
+                  />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1" for="input-card-exp">
+                      {{ i18n.isArabic() ? 'تاريخ الانتهاء' : 'Expiry Date' }}
+                    </label>
+                    <input
+                      id="input-card-exp"
+                      type="text"
+                      formControlName="cardExpiry"
+                      class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-400 mb-1" for="input-card-cvc">
+                      {{ i18n.isArabic() ? 'رمز الأمان (CVC)' : 'CVC' }}
+                    </label>
+                    <input
+                      id="input-card-cvc"
+                      type="password"
+                      formControlName="cardCvc"
+                      class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+              </div>
+            } @else if (selectedPaymentMethod() === 'bank_transfer') {
+              <div class="p-4 rounded-2xl bg-slate-950 border border-amber-500/30 space-y-2 text-xs">
+                <div class="font-bold text-amber-400 flex items-center gap-1.5">
+                  <mat-icon class="text-base">account_balance</mat-icon>
+                  <span>بيانات الحساب البنكي الرسمي لمصرف الراجحي:</span>
+                </div>
+                <div class="text-slate-300 font-mono text-[11px]">IBAN: SA0380000000608010167519</div>
+                <div class="text-slate-400 text-[11px]">اسم المستفيد: شركة الراية لتقنية المعلومات والأنظمة المحاسبية</div>
+              </div>
+            } @else {
+              <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-center text-xs text-slate-300">
+                <span>سيتم إتمام المصادقة السريعة عبر تطبيق Apple Pay الخاص بك.</span>
+              </div>
+            }
+
+            <!-- Agree Terms -->
+            <label class="flex items-start gap-2.5 text-xs text-slate-300 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                formControlName="agreeTerms"
+                class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500 mt-0.5"
+              />
+              <span class="leading-relaxed">
+                {{ i18n.isArabic()
+                  ? 'أوافق على الشروط والأحكام وسياسة الخصوصية الخاصة بنظام الراية المحاسبي السحابي وضوابط هيئة الزكاة والضريبة والجمارك (ZATCA).'
+                  : 'I agree to the Terms of Service, Privacy Policy, and ZATCA E-Invoicing regulatory standards.' }}
+              </span>
+            </label>
+
+            <!-- Navigation Buttons -->
+            <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+              <button
+                type="button"
+                (click)="goToStep(3)"
+                class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <mat-icon class="text-sm">arrow_back</mat-icon>
+                <span>{{ i18n.isArabic() ? 'السابق' : 'Previous' }}</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="onSubmitRegistration()"
+                [disabled]="isLoading()"
+                class="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-emerald-500/20 active:scale-[0.99] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                @if (isLoading()) {
+                  <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <span>{{ i18n.isArabic() ? 'جارِ إنشاء المنشأة وتفعيل الاشتراك...' : 'Activating Company...' }}</span>
+                } @else {
+                  <mat-icon class="text-base">verified</mat-icon>
+                  <span>{{ i18n.isArabic() ? 'تأكيد الاشتراك وتفعيل الحساب فوراً' : 'Confirm & Activate Company' }}</span>
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Order Summary & Review -->
+          <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-black text-white mb-4">
+                {{ i18n.isArabic() ? 'ملخص الاشتراك والطلب' : 'Order & Plan Summary' }}
+              </h3>
+
+              <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3 mb-5 text-xs">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-850">
+                  <span class="text-slate-400">الباقة المختارة:</span>
+                  <span class="font-bold text-white">{{ selectedPlan().nameAr }}</span>
+                </div>
+                <div class="flex items-center justify-between pb-2 border-b border-slate-850">
+                  <span class="text-slate-400">مدة الاشتراك:</span>
+                  <span class="font-bold text-emerald-400">{{ billingCycle() === 'yearly' ? 'اشتراك سنوي (سنة كاملة)' : 'اشتراك شهري' }}</span>
+                </div>
+                <div class="flex items-center justify-between pb-2 border-b border-slate-850">
+                  <span class="text-slate-400">المنشأة:</span>
+                  <span class="font-bold text-slate-200 truncate max-w-[170px]">{{ registerForm.get('companyNameAr')?.value || 'شركة جديدة' }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-400">الرقم الضريبي:</span>
+                  <span class="font-mono text-slate-300">{{ registerForm.get('vatNumber')?.value || '—' }}</span>
+                </div>
+              </div>
+
+              <!-- Cost breakdown -->
+              <div class="space-y-2 text-xs border-t border-slate-800 pt-4 mb-4">
+                <div class="flex items-center justify-between text-slate-300">
+                  <span>قيمة الباقة الأساسية:</span>
+                  <span class="font-bold font-mono">{{ planPrice().toLocaleString() }} ر.س</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>ضريبة القيمة المضافة (15%):</span>
+                  <span class="font-bold font-mono">{{ vatAmount().toLocaleString() }} ر.س</span>
+                </div>
+                <div class="flex items-center justify-between text-base font-black text-white border-t border-slate-800 pt-3">
+                  <span>المجموع الإجمالي المستحق:</span>
+                  <span class="text-emerald-400 font-mono">{{ totalAmount().toLocaleString() }} ر.س</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Guarantee badge -->
+            <div class="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-300 flex items-center gap-2.5">
+              <mat-icon class="text-indigo-400 text-base shrink-0">shield</mat-icon>
+              <span>ضمان استرجاع الأموال خلال 14 يوماً مع دعم فني محاسبي متكامل ومرافقة لربط ZATCA.</span>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>

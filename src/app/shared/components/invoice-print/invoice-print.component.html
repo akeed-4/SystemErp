@@ -1,0 +1,233 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto no-print">
+  <!-- Dialog Container -->
+  <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[94vh] flex flex-col overflow-hidden my-auto border border-slate-200">
+    <!-- Top Action Bar (hidden when printing) -->
+    <div class="p-4 bg-slate-100 border-b border-slate-200 flex items-center justify-between no-print">
+      <div class="flex items-center gap-2">
+        <span class="material-icons text-indigo-600">receipt_long</span>
+        <span class="font-bold text-slate-800 text-sm">معاينة وطباعة الفاتورة الضريبية (ZATCA Compliant)</span>
+        <span class="text-xs px-2.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono font-bold">
+          {{ invoice.invoiceNumber }}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="text-[10px] text-slate-500 hidden sm:block ml-2 text-right">
+          إذا لم تستجب شاشة الطباعة<br/>افتح التطبيق في نافذة جديدة (New Tab)
+        </div>
+        <button
+          id="btn-print-dialog-action"
+          type="button"
+          (click)="printInvoice()"
+          class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
+        >
+          <span class="material-icons text-sm">print</span>
+          <span>طباعة الفاتورة (Print Invoice)</span>
+        </button>
+
+        <button
+          id="btn-close-print-dialog"
+          type="button"
+          (click)="close.emit()"
+          class="p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+          title="إغلاق"
+        >
+          <span class="material-icons text-base">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Printable Invoice Body -->
+    <div id="printable-invoice-body" class="p-8 overflow-y-auto printable-area bg-white text-slate-900" dir="rtl">
+      <!-- Header with Brand Emblem / Seller Details & ZATCA QR Code -->
+      <div class="flex items-start justify-between border-b-2 border-slate-900 pb-5 mb-5">
+        <!-- Seller Info & Logo -->
+        <div class="flex items-start gap-4">
+          <!-- Corporate Vector Emblem -->
+          <div class="w-16 h-16 rounded-xl bg-gradient-to-tr from-indigo-950 to-indigo-800 flex items-center justify-center text-white shadow-md border-2 border-indigo-950 shrink-0">
+            <span class="material-icons text-3xl">corporate_fare</span>
+          </div>
+
+          <div class="space-y-1">
+            <div class="inline-block bg-indigo-950 text-white text-[10px] font-bold px-3 py-0.5 rounded-full mb-1">
+              {{ invoice.invoiceType === 'tax_invoice' ? 'فاتورة ضريبية قياسية (B2B) — Standard Tax Invoice' : 'فاتورة ضريبية مبسطة (B2C) — Simplified Tax Invoice' }}
+            </div>
+            <h1 class="text-xl font-extrabold text-slate-950 tracking-tight">{{ tenant.nameAr }}</h1>
+            <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">{{ tenant.nameEn }}</p>
+            <p class="text-xs text-slate-600">
+              {{ tenant.address }} - {{ tenant.city }}، {{ tenant.country }}
+            </p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-slate-700 pt-1">
+              <span>الرقم الضريبي (VAT): <strong class="font-mono text-indigo-950">{{ tenant.vatNumber }}</strong></span>
+              <span>السجل التجاري (CR): <strong class="font-mono text-slate-800">{{ tenant.crNumber }}</strong></span>
+              <span>الهاتف: <strong class="font-mono text-slate-800" dir="ltr">{{ tenant.phone }}</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZATCA Compliant QR Code Section -->
+        <div class="text-center flex flex-col items-center shrink-0 border-r-2 border-slate-200 pr-4">
+          <app-zatca-qr
+            *ngIf="invoice.zatcaQrCode"
+            [qrData]="invoice.zatcaQrCode"
+            [size]="125"
+          ></app-zatca-qr>
+          <span class="text-[9px] text-slate-500 font-mono font-bold mt-1">ZATCA FATOORA QR</span>
+        </div>
+      </div>
+
+      <!-- Invoice Meta & Buyer Info Grid -->
+      <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-300 mb-6 text-xs">
+        <!-- Left: Invoice Meta -->
+        <div class="space-y-2 border-l border-slate-300 pl-4">
+          <div class="flex justify-between">
+            <span class="text-slate-600 font-bold">رقم الفاتورة (Invoice No):</span>
+            <strong class="font-mono text-indigo-950 font-black text-sm">{{ invoice.invoiceNumber }}</strong>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600 font-medium">تاريخ الإصدار (Issue Date):</span>
+            <span class="font-mono font-bold text-slate-800">{{ invoice.issueDate }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600 font-medium">وقت الإصدار (Issue Time):</span>
+            <span class="font-mono font-bold text-slate-800">{{ invoice.issueTime }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600 font-medium">طريقة السداد:</span>
+            <span class="font-bold text-indigo-900 bg-white px-2 py-0.5 rounded border border-slate-200">
+              {{ invoice.paymentMethod === 'cash' ? 'نقداً (كاش)' : invoice.paymentMethod === 'bank_transfer' ? 'تحويل بنكي' : invoice.paymentMethod === 'bank_card' ? 'شبكة / مدى' : 'آجل (ذمم مدينة)' }}
+            </span>
+          </div>
+          <div class="flex justify-between items-center pt-1 border-t border-slate-200">
+            <span class="text-slate-500">المعرف الفريد (UUID):</span>
+            <span class="font-mono text-[9px] text-slate-600 truncate max-w-[180px]" [title]="invoice.uuid">{{ invoice.uuid }}</span>
+          </div>
+        </div>
+
+        <!-- Right: Buyer Info -->
+        <div class="space-y-2 pr-2">
+          <div class="flex justify-between">
+            <span class="text-slate-600 font-bold">اسم العميل / المشتري (Buyer):</span>
+            <strong class="text-slate-950 font-bold text-sm">{{ invoice.partyName }}</strong>
+          </div>
+          <div class="flex justify-between" *ngIf="invoice.partyVatNumber">
+            <span class="text-slate-600 font-medium">الرقم الضريبي للمشتري:</span>
+            <span class="font-mono font-bold text-indigo-950">{{ invoice.partyVatNumber }}</span>
+          </div>
+          <div class="flex justify-between" *ngIf="invoice.partyCrNumber">
+            <span class="text-slate-600 font-medium">السجل التجاري للمشتري:</span>
+            <span class="font-mono font-bold text-slate-800">{{ invoice.partyCrNumber }}</span>
+          </div>
+          <div class="flex justify-between" *ngIf="invoice.partyAddress">
+            <span class="text-slate-600 font-medium">عنوان المشتري:</span>
+            <span class="text-slate-800">{{ invoice.partyAddress }}</span>
+          </div>
+          <div class="flex justify-between items-center pt-1 border-t border-slate-200">
+            <span class="text-slate-600 font-medium">حالة الربط والاعتماد ZATCA:</span>
+            <span
+              class="px-2.5 py-0.5 rounded text-[10px] font-black"
+              [ngClass]="{
+                'bg-emerald-100 text-emerald-900 border border-emerald-300': invoice.zatcaStatus === 'cleared' || invoice.zatcaStatus === 'reported',
+                'bg-amber-100 text-amber-900 border border-amber-300': invoice.zatcaStatus === 'not_submitted',
+                'bg-rose-100 text-rose-900 border border-rose-300': invoice.zatcaStatus === 'rejected'
+              }"
+            >
+              {{ invoice.zatcaStatus === 'cleared' ? 'معتمدة ومرخصة (CLEARED ✓)' : invoice.zatcaStatus === 'reported' ? 'مبلغ عنها (REPORTED ✓)' : 'مسودة غير مرسلة' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Breakdown Table -->
+      <table class="w-full text-xs border-collapse border-2 border-slate-300 mb-6">
+        <thead>
+          <tr class="bg-slate-100 text-slate-800 font-extrabold border-b-2 border-slate-300 text-right">
+            <th class="p-2.5 border-r border-slate-300 w-10 text-center">#</th>
+            <th class="p-2.5 border-r border-slate-300">الوصف والسلعة (Item Description)</th>
+            <th class="p-2.5 border-r border-slate-300 text-center w-16">الكمية</th>
+            <th class="p-2.5 border-r border-slate-300 text-left w-24">سعر الوحدة</th>
+            <th class="p-2.5 border-r border-slate-300 text-left w-20">الخصم</th>
+            <th class="p-2.5 border-r border-slate-300 text-left w-24">المبلغ الخاضع</th>
+            <th class="p-2.5 border-r border-slate-300 text-center w-14">الضريبة</th>
+            <th class="p-2.5 border-r border-slate-300 text-left w-24">قيمة الضريبة</th>
+            <th class="p-2.5 text-left w-28">المجموع الكلي</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-300">
+          <tr *ngFor="let item of invoice.items; let i = index" class="hover:bg-slate-50/50">
+            <td class="p-2.5 border-r border-slate-300 text-center font-mono font-bold">{{ i + 1 }}</td>
+            <td class="p-2.5 border-r border-slate-300">
+              <span class="font-bold block text-slate-900">{{ item.itemName }}</span>
+              <span class="text-[10px] text-slate-500 font-mono" *ngIf="item.sku">SKU: {{ item.sku }}</span>
+            </td>
+            <td class="p-2.5 border-r border-slate-300 text-center font-mono font-bold">{{ item.quantity }} {{ item.unit }}</td>
+            <td class="p-2.5 border-r border-slate-300 text-left font-mono">{{ item.unitPrice.toFixed(2) }}</td>
+            <td class="p-2.5 border-r border-slate-300 text-left font-mono text-slate-500">{{ (item.discount || 0).toFixed(2) }}</td>
+            <td class="p-2.5 border-r border-slate-300 text-left font-mono font-bold text-slate-900">{{ item.totalBeforeVat.toFixed(2) }}</td>
+            <td class="p-2.5 border-r border-slate-300 text-center font-mono text-slate-600">{{ item.vatRate }}%</td>
+            <td class="p-2.5 border-r border-slate-300 text-left font-mono font-semibold text-indigo-950">{{ item.vatAmount.toFixed(2) }}</td>
+            <td class="p-2.5 text-left font-mono font-black text-slate-950">{{ item.totalAfterVat.toFixed(2) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Financial Totals Summary & Tafqeet Box -->
+      <div class="grid grid-cols-2 gap-6 items-start mb-8 tax-summary-box">
+        <!-- Tafqeet and Notes -->
+        <div class="bg-slate-50 border border-slate-300 rounded-xl p-4 space-y-2">
+          <span class="text-xs text-slate-600 font-bold block">المبلغ الإجمالي كتابةً بالحروف العربية:</span>
+          <p class="text-xs font-black text-slate-900 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed">
+            {{ tafqeetTotal }}
+          </p>
+          <div class="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
+            <span>ملاحظات الفاتورة: البضاعة المباعة خاضعة للشروط والأحكام العامة للمنشأة والضمان المعتمد.</span>
+          </div>
+        </div>
+
+        <!-- Totals Calculation Table -->
+        <div class="border-2 border-slate-300 rounded-xl overflow-hidden bg-slate-50">
+          <div class="flex justify-between p-2.5 border-b border-slate-200 text-xs">
+            <span class="text-slate-600 font-semibold">إجمالي المبلغ الخاضع للضريبة (Subtotal):</span>
+            <span class="font-mono font-bold text-slate-900">{{ invoice.subtotal.toFixed(2) }} ر.س</span>
+          </div>
+          <div class="flex justify-between p-2.5 border-b border-slate-200 text-xs">
+            <span class="text-slate-600 font-semibold">ضريبة القيمة المضافة 15% (VAT 15%):</span>
+            <span class="font-mono font-bold text-indigo-950">{{ invoice.vatTotal.toFixed(2) }} ر.س</span>
+          </div>
+          <div class="flex justify-between p-3 bg-indigo-950 text-white text-sm font-black">
+            <span>المجموع الإجمالي المستحق (Grand Total):</span>
+            <span class="font-mono text-base">{{ invoice.grandTotal.toFixed(2) }} ر.س</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Official Signatures & Seal Section -->
+      <div class="pt-6 border-t-2 border-slate-800 grid grid-cols-3 gap-6 text-center text-xs text-slate-800 signature-box">
+        <div>
+          <span class="font-bold block mb-10 text-sm">المستلم / العميل</span>
+          <span class="text-slate-500 text-xs block mb-2">الاسم والتوقيع</span>
+          <div class="border-b-2 border-slate-400 w-44 mx-auto"></div>
+        </div>
+
+        <div>
+          <span class="font-bold block mb-10 text-sm">المحاسب المسؤول</span>
+          <span class="text-slate-500 text-xs block mb-2">إدارة المبيعات والحسابات</span>
+          <div class="border-b-2 border-slate-400 w-44 mx-auto"></div>
+        </div>
+
+        <div>
+          <span class="font-bold block mb-2 text-sm">ختم واعتماد المنشأة</span>
+          <div class="w-16 h-16 border-2 border-dashed border-indigo-900 rounded-full mx-auto flex items-center justify-center text-[10px] text-indigo-900 font-bold">
+            الختم الرسمي
+          </div>
+        </div>
+      </div>
+
+      <!-- ZATCA Security Microprint -->
+      <div class="mt-8 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+        <span>FATOORA KSA — UBL 2.1 Standard Compliant Document — CSID Verified</span>
+        <span>صفحة 1 من 1</span>
+      </div>
+    </div>
+  </div>
+</div>

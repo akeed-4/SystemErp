@@ -1,0 +1,228 @@
+{
+  "entities": {
+    "Tenant": {
+      "title": "Tenant",
+      "description": "Multi-tenant company organization profile with ZATCA and subscription metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "vatNumber": { "type": "string" },
+        "crNumber": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "country": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "currency": { "type": "string" },
+        "financialYearStart": { "type": "string" },
+        "financialYearEnd": { "type": "string" }
+      },
+      "required": ["id", "nameAr", "vatNumber", "crNumber"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Authenticated user in ERP system",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["SuperAdmin", "FinancialManager", "Accountant", "SalesOfficer", "Auditor"] },
+        "tenantId": { "type": "string" }
+      },
+      "required": ["id", "email", "name", "role", "tenantId"]
+    },
+    "Account": {
+      "title": "Account",
+      "description": "Chart of accounts ledger node",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "type": { "type": "string", "enum": ["asset", "liability", "equity", "revenue", "expense"] },
+        "parentCode": { "type": "string" },
+        "balance": { "type": "number" },
+        "isDebitNature": { "type": "boolean" }
+      },
+      "required": ["code", "nameAr", "type", "balance", "isDebitNature"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "ZATCA compliant sales or purchase invoice",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "kind": { "type": "string", "enum": ["sales", "purchase"] },
+        "invoiceType": { "type": "string", "enum": ["tax_invoice", "simplified_tax_invoice"] },
+        "issueDate": { "type": "string" },
+        "issueTime": { "type": "string" },
+        "partyName": { "type": "string" },
+        "partyVatNumber": { "type": "string" },
+        "partyCrNumber": { "type": "string" },
+        "partyAddress": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bank_transfer", "bank_card", "credit"] },
+        "subtotal": { "type": "number" },
+        "vatTotal": { "type": "number" },
+        "grandTotal": { "type": "number" },
+        "grossProfit": { "type": "number" },
+        "zatcaStatus": { "type": "string", "enum": ["cleared", "reported", "not_submitted", "rejected", "not_applicable"] },
+        "zatcaQrCode": { "type": "string" },
+        "uuid": { "type": "string" }
+      },
+      "required": ["id", "invoiceNumber", "kind", "issueDate", "partyName", "subtotal", "vatTotal", "grandTotal"]
+    },
+    "Voucher": {
+      "title": "Voucher",
+      "description": "Financial receipt or payment voucher",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "voucherNumber": { "type": "string" },
+        "type": { "type": "string", "enum": ["receipt", "payment"] },
+        "date": { "type": "string" },
+        "amount": { "type": "number" },
+        "amountInWordsAr": { "type": "string" },
+        "partyName": { "type": "string" },
+        "partyAccountCode": { "type": "string" },
+        "treasuryAccountCode": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "bank_transfer", "cheque", "mada"] },
+        "referenceNumber": { "type": "string" },
+        "notes": { "type": "string" },
+        "receivedOrPaidBy": { "type": "string" }
+      },
+      "required": ["id", "voucherNumber", "type", "date", "amount", "partyName"]
+    },
+    "JournalEntry": {
+      "title": "JournalEntry",
+      "description": "Balanced double-entry general journal transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "entryNumber": { "type": "string" },
+        "date": { "type": "string" },
+        "description": { "type": "string" },
+        "referenceType": { "type": "string" },
+        "referenceId": { "type": "string" },
+        "totalDebit": { "type": "number" },
+        "totalCredit": { "type": "number" },
+        "isBalanced": { "type": "boolean" }
+      },
+      "required": ["id", "entryNumber", "date", "description", "totalDebit", "totalCredit", "isBalanced"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Client or Customer record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "code": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "vatNumber": { "type": "string" },
+        "crNumber": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "city": { "type": "string" },
+        "district": { "type": "string" },
+        "street": { "type": "string" },
+        "buildingNo": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "tenantId", "code", "nameAr", "nameEn", "phone", "city"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "Supplier or Vendor record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "code": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "vatNumber": { "type": "string" },
+        "crNumber": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "city": { "type": "string" },
+        "address": { "type": "string" },
+        "bankName": { "type": "string" },
+        "iban": { "type": "string" },
+        "swiftCode": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "tenantId", "code", "nameAr", "nameEn", "phone", "city"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Product or Service item record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenantId": { "type": "string" },
+        "sku": { "type": "string" },
+        "barcode": { "type": "string" },
+        "nameAr": { "type": "string" },
+        "nameEn": { "type": "string" },
+        "category": { "type": "string" },
+        "unit": { "type": "string" },
+        "currentStock": { "type": "number" },
+        "averageCost": { "type": "number" },
+        "lastPurchaseCost": { "type": "number" },
+        "sellingPrice": { "type": "number" },
+        "vatRate": { "type": "number" },
+        "minStockLevel": { "type": "number" },
+        "notes": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "tenantId", "sku", "nameAr", "nameEn", "category", "unit", "sellingPrice", "vatRate"]
+    }
+  },
+  "firestore": {
+    "/tenants/{tenantId}": {
+      "schema": { "$ref": "#/entities/Tenant" },
+      "description": "Tenant enterprise profiles"
+    },
+    "/tenants/{tenantId}/accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/Account" },
+      "description": "Accounts chart for tenant"
+    },
+    "/tenants/{tenantId}/invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/Invoice" },
+      "description": "Invoices records for tenant"
+    },
+    "/tenants/{tenantId}/vouchers/{voucherId}": {
+      "schema": { "$ref": "#/entities/Voucher" },
+      "description": "Receipt and payment vouchers for tenant"
+    },
+    "/tenants/{tenantId}/journalEntries/{entryId}": {
+      "schema": { "$ref": "#/entities/JournalEntry" },
+      "description": "Double entry journal logs for tenant"
+    },
+    "/tenants/{tenantId}/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "Customer records for tenant"
+    },
+    "/tenants/{tenantId}/suppliers/{supplierId}": {
+      "schema": { "$ref": "#/entities/Supplier" },
+      "description": "Supplier records for tenant"
+    },
+    "/tenants/{tenantId}/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Product and item records for tenant"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and RBAC permissions"
+    }
+  }
+}

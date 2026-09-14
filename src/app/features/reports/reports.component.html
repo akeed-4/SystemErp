@@ -1,0 +1,457 @@
+<div class="space-y-6">
+  <!-- Header Bar with Report Selector and Print Button (Screen only) -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs no-print">
+    <div>
+      <h2 class="text-xl font-black text-slate-900 flex items-center gap-2">
+        <span class="material-icons text-indigo-600">assessment</span>
+        <span>التقارير المالية والقوائم المحاسبية المعتمدة</span>
+      </h2>
+      <p class="text-xs text-slate-500 mt-1">
+        قائمة الدخل، الميزانية العمومية (المركز المالي)، إقرار ضريبة القيمة المضافة ZATCA، ميزان المراجعة، وتقييم المخزون.
+      </p>
+    </div>
+
+    <button
+      id="btn-print-report"
+      type="button"
+      (click)="printCurrentReport()"
+      class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer active:scale-95"
+    >
+      <span class="material-icons text-sm">print</span>
+      <span>طباعة التقرير المالي الحالي (Print Report)</span>
+    </button>
+  </div>
+
+  <!-- Report Selector Tabs (Screen only) -->
+  <div class="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-2 no-print">
+    <button
+      id="tab-income-stmt"
+      type="button"
+      (click)="selectedReport.set('income_statement')"
+      [class.bg-indigo-600]="selectedReport() === 'income_statement'"
+      [class.text-white]="selectedReport() === 'income_statement'"
+      [class.bg-white]="selectedReport() !== 'income_statement'"
+      [class.text-slate-700]="selectedReport() !== 'income_statement'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+    >
+      <span class="material-icons text-xs">trending_up</span>
+      <span>قائمة الدخل والأرباح (P&L)</span>
+    </button>
+
+    <button
+      id="tab-balance-sheet"
+      type="button"
+      (click)="selectedReport.set('balance_sheet')"
+      [class.bg-indigo-600]="selectedReport() === 'balance_sheet'"
+      [class.text-white]="selectedReport() === 'balance_sheet'"
+      [class.bg-white]="selectedReport() !== 'balance_sheet'"
+      [class.text-slate-700]="selectedReport() !== 'balance_sheet'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+    >
+      <span class="material-icons text-xs">account_balance</span>
+      <span>الميزانية العمومية والمركز المالي (Balance Sheet)</span>
+    </button>
+
+    <button
+      id="tab-vat-return"
+      type="button"
+      (click)="selectedReport.set('vat_return')"
+      [class.bg-indigo-600]="selectedReport() === 'vat_return'"
+      [class.text-white]="selectedReport() === 'vat_return'"
+      [class.bg-white]="selectedReport() !== 'vat_return'"
+      [class.text-slate-700]="selectedReport() !== 'vat_return'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+    >
+      <span class="material-icons text-xs">receipt_long</span>
+      <span>إقرار ضريبة القيمة المضافة (ZATCA VAT Return)</span>
+    </button>
+
+    <button
+      id="tab-trial-balance"
+      type="button"
+      (click)="selectedReport.set('trial_balance')"
+      [class.bg-indigo-600]="selectedReport() === 'trial_balance'"
+      [class.text-white]="selectedReport() === 'trial_balance'"
+      [class.bg-white]="selectedReport() !== 'trial_balance'"
+      [class.text-slate-700]="selectedReport() !== 'trial_balance'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+    >
+      <span class="material-icons text-xs">balance</span>
+      <span>ميزان المراجعة (Trial Balance)</span>
+    </button>
+
+    <button
+      id="tab-inv-val"
+      type="button"
+      (click)="selectedReport.set('inventory_valuation')"
+      [class.bg-indigo-600]="selectedReport() === 'inventory_valuation'"
+      [class.text-white]="selectedReport() === 'inventory_valuation'"
+      [class.bg-white]="selectedReport() !== 'inventory_valuation'"
+      [class.text-slate-700]="selectedReport() !== 'inventory_valuation'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+    >
+      <span class="material-icons text-xs">inventory</span>
+      <span>تقييم المخزون وتكلفة البضاعة</span>
+    </button>
+  </div>
+
+  <!-- Printable Report Container -->
+  <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xs printable-area" dir="rtl">
+    <!-- Report Corporate Official Brand Header -->
+    <div class="flex items-center justify-between border-b-2 border-slate-900 pb-5 mb-6">
+      <div class="flex items-center gap-4">
+        <!-- Corporate Logo Badge -->
+        <div class="w-16 h-16 rounded-xl bg-gradient-to-tr from-indigo-950 to-indigo-800 flex items-center justify-center text-white shadow-md border-2 border-indigo-950 shrink-0">
+          <span class="material-icons text-3xl">domain</span>
+        </div>
+        <div>
+          <h2 class="text-xl font-black text-slate-950">{{ erpService.activeTenant().nameAr }}</h2>
+          <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">{{ erpService.activeTenant().nameEn }}</p>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mt-1">
+            <span>الرقم الضريبي (VAT): <strong class="font-mono text-indigo-950">{{ erpService.activeTenant().vatNumber }}</strong></span>
+            <span>السجل التجاري (CR): <strong class="font-mono">{{ erpService.activeTenant().crNumber }}</strong></span>
+            <span>المدينة: <strong class="text-slate-800">{{ erpService.activeTenant().city }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-left border-r-2 border-indigo-600 pr-4 shrink-0">
+        <span class="text-xs text-slate-500 block">السنة المالية / الفترة:</span>
+        <strong class="text-xs text-slate-900 font-bold">2026 — الربع الحالي</strong>
+        <span class="text-[10px] text-slate-400 block mt-1">تاريخ إصدار التقرير: {{ erpService.financialStats().todayDate }}</span>
+        <span class="text-[10px] text-slate-400 block">العملة الأساسية: ريال سعودي (SAR)</span>
+      </div>
+    </div>
+
+    <!-- 1. Income Statement View -->
+    @if (selectedReport() === 'income_statement') {
+      <div class="space-y-6">
+        <div class="text-center pb-2 border-b-2 border-slate-900 bg-slate-100/60 py-2 rounded-lg">
+          <h1 class="text-lg font-black text-slate-900">
+            قائمة الدخل والأرباح والخسائر الشاملة (INCOME STATEMENT)
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">عن الفترة المنتهية في {{ erpService.financialStats().todayDate }}</p>
+        </div>
+
+        <div class="border-2 border-slate-300 rounded-xl overflow-hidden text-sm">
+          <table class="w-full text-right border-collapse">
+            <thead>
+              <tr class="bg-slate-100 border-b-2 border-slate-300 font-extrabold text-slate-800">
+                <th class="p-3 border-r border-slate-300">البند المحاسبي (Account Head)</th>
+                <th class="p-3 border-r border-slate-300 w-36 text-left">جزئي (SAR)</th>
+                <th class="p-3 w-40 text-left">كلي (SAR)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              <!-- Revenues -->
+              <tr class="bg-slate-50/50 font-bold">
+                <td class="p-3 text-indigo-950 font-black" colspan="3">1. إيرادات النشاط التشغيلي والمبيعات</td>
+              </tr>
+              <tr>
+                <td class="p-3 pr-8 text-slate-700">إجمالي مبيعات المنتجات والخدمات (خاضعة لضريبة 15%)</td>
+                <td class="p-3 text-left font-mono text-slate-800">{{ incomeStatement().sales.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+                <td class="p-3 text-left font-mono font-bold text-slate-900">{{ incomeStatement().sales.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+              </tr>
+
+              <!-- COGS -->
+              <tr class="bg-slate-50/50 font-bold">
+                <td class="p-3 text-indigo-950 font-black" colspan="3">2. تكلفة الإيرادات والبضاعة المباعة (COGS)</td>
+              </tr>
+              <tr>
+                <td class="p-3 pr-8 text-slate-700">تكلفة مخزون البضاعة المباعة (Moving Average Method)</td>
+                <td class="p-3 text-left font-mono text-rose-700">({{ incomeStatement().cogs.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }})</td>
+                <td class="p-3 text-left font-mono font-bold text-rose-800">({{ incomeStatement().cogs.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }})</td>
+              </tr>
+
+              <!-- Gross Profit Summary -->
+              <tr class="bg-indigo-50/80 font-black border-y-2 border-indigo-200">
+                <td class="p-3 text-indigo-950 text-base">إجمالي الربح التجاري (GROSS PROFIT)</td>
+                <td></td>
+                <td class="p-3 text-left font-mono text-base text-indigo-950">
+                  {{ incomeStatement().grossProfit.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}
+                </td>
+              </tr>
+
+              <!-- Operating Expenses -->
+              <tr class="bg-slate-50/50 font-bold">
+                <td class="p-3 text-indigo-950 font-black" colspan="3">3. المصروفات التشغيلية والإدارية والعمومية</td>
+              </tr>
+              <tr>
+                <td class="p-3 pr-8 text-slate-700">مصاريف الإيجار، المرافق والخدمات</td>
+                <td class="p-3 text-left font-mono text-slate-600">5,000.00</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="p-3 pr-8 text-slate-700">مصاريف التسويق والضيافة والتوزيع</td>
+                <td class="p-3 text-left font-mono text-slate-600">3,000.00</td>
+                <td class="p-3 text-left font-mono font-bold text-rose-800">({{ incomeStatement().operatingExpenses.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }})</td>
+              </tr>
+
+              <!-- Net Profit Summary -->
+              <tr class="bg-slate-900 text-white font-black text-base border-t-2 border-slate-950">
+                <td class="p-4 text-emerald-300">صافي الربح التشغيلي قبل الزكاة والضريبة (NET PROFIT)</td>
+                <td></td>
+                <td class="p-4 text-left font-mono text-lg text-emerald-300">
+                  {{ incomeStatement().netProfit.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }} ر.س
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-300 text-xs">
+          <span class="font-bold text-slate-700">صافي الدخل كتابةً بالحروف:</span>
+          <span class="font-bold text-indigo-950 mr-2">{{ incomeStatement().netProfitTafqeet }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- 2. Balance Sheet View (الميزانية العمومية) -->
+    @if (selectedReport() === 'balance_sheet') {
+      <div class="space-y-6">
+        <div class="text-center pb-2 border-b-2 border-slate-900 bg-slate-100/60 py-2 rounded-lg">
+          <h1 class="text-lg font-black text-slate-900">
+            قائمة المركز المالي والميزانية العمومية (BALANCE SHEET)
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">كما في {{ erpService.financialStats().todayDate }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          <!-- Assets Column -->
+          <div class="border-2 border-slate-300 rounded-xl p-4 bg-slate-50/50 space-y-4">
+            <h3 class="text-sm font-black text-indigo-950 border-b-2 border-indigo-900 pb-2 flex justify-between">
+              <span>الأصول والموجودات (ASSETS)</span>
+              <span class="font-mono">{{ balanceSheet().totalAssets.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }} ر.س</span>
+            </h3>
+
+            <div class="space-y-2">
+              @for (acc of balanceSheet().assets; track acc.code) {
+                <div class="flex justify-between items-center py-1.5 border-b border-slate-200">
+                  <span class="text-slate-700"><strong class="font-mono ml-1.5 text-slate-500">{{ acc.code }}</strong> {{ acc.nameAr }}</span>
+                  <span class="font-mono font-bold text-slate-900">{{ acc.balance.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="pt-3 border-t-2 border-slate-900 flex justify-between font-black text-sm text-indigo-950">
+              <span>إجمالي الأصول (Total Assets):</span>
+              <span class="font-mono">{{ balanceSheet().totalAssets.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }} ر.س</span>
+            </div>
+          </div>
+
+          <!-- Liabilities & Equity Column -->
+          <div class="space-y-6">
+            <!-- Liabilities -->
+            <div class="border-2 border-slate-300 rounded-xl p-4 bg-slate-50/50 space-y-3">
+              <h3 class="text-sm font-black text-rose-950 border-b-2 border-rose-900 pb-2 flex justify-between">
+                <span>الخصوم والالتزامات (LIABILITIES)</span>
+                <span class="font-mono">{{ balanceSheet().totalLiabilities.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }} ر.س</span>
+              </h3>
+              <div class="space-y-2">
+                @for (acc of balanceSheet().liabilities; track acc.code) {
+                  <div class="flex justify-between items-center py-1 border-b border-slate-200">
+                    <span class="text-slate-700"><strong class="font-mono ml-1.5 text-slate-500">{{ acc.code }}</strong> {{ acc.nameAr }}</span>
+                    <span class="font-mono font-bold text-slate-900">{{ acc.balance.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Equity -->
+            <div class="border-2 border-slate-300 rounded-xl p-4 bg-slate-50/50 space-y-3">
+              <h3 class="text-sm font-black text-emerald-950 border-b-2 border-emerald-900 pb-2 flex justify-between">
+                <span>حقوق الملكية ورأس المال (EQUITY)</span>
+                <span class="font-mono">{{ balanceSheet().totalEquity.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }} ر.س</span>
+              </h3>
+              <div class="space-y-2">
+                @for (acc of balanceSheet().equity; track acc.code) {
+                  <div class="flex justify-between items-center py-1 border-b border-slate-200">
+                    <span class="text-slate-700"><strong class="font-mono ml-1.5 text-slate-500">{{ acc.code }}</strong> {{ acc.nameAr }}</span>
+                    <span class="font-mono font-bold text-slate-900">{{ acc.balance.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Total Liabilities & Equity -->
+            <div class="p-4 bg-slate-900 text-white rounded-xl flex justify-between items-center font-black text-sm">
+              <span>مجموع الخصوم وحقوق الملكية:</span>
+              <span class="font-mono text-emerald-300">{{ balanceSheet().totalLiabilitiesAndEquity.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }} ر.س</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 3. VAT Return View (ZATCA Return) -->
+    @if (selectedReport() === 'vat_return') {
+      <div class="space-y-6">
+        <div class="text-center pb-2 border-b-2 border-slate-900 bg-slate-100/60 py-2 rounded-lg">
+          <h1 class="text-lg font-black text-slate-900">
+            إقرار ضريبة القيمة المضافة (ZATCA VAT RETURN)
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">وفق معايير هيئة الزكاة والضريبة والجمارك — معدل الضريبة 15%</p>
+        </div>
+
+        <table class="w-full text-xs border-collapse border-2 border-slate-300">
+          <thead>
+            <tr class="bg-slate-100 border-b-2 border-slate-300 font-black text-slate-900 text-right">
+              <th class="p-3 border-r border-slate-300">البند في الإقرار الضريبي</th>
+              <th class="p-3 border-r border-slate-300 text-left w-36">المبلغ الخاضع (SAR)</th>
+              <th class="p-3 border-r border-slate-300 text-center w-24">النسبة</th>
+              <th class="p-3 text-left w-36">مبلغ الضريبة (SAR)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-300">
+            <tr class="bg-slate-50/50 font-bold">
+              <td class="p-3 text-indigo-950 font-black" colspan="4">أولاً: مبيعات المنشأة (ضريبة المخرجات Output VAT)</td>
+            </tr>
+            <tr>
+              <td class="p-3 pr-6 text-slate-800">المبيعات الخاضعة للنسبة الأساسية (15%) في المملكة</td>
+              <td class="p-3 text-left font-mono font-bold">{{ vatReturn().taxableSales.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+              <td class="p-3 text-center font-mono font-bold">15%</td>
+              <td class="p-3 text-left font-mono font-bold text-indigo-950">{{ vatReturn().outputVat.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+            </tr>
+
+            <tr class="bg-slate-50/50 font-bold">
+              <td class="p-3 text-indigo-950 font-black" colspan="4">ثانياً: مشتريات المنشأة (ضريبة المدخلات Input VAT القابلة للخصم)</td>
+            </tr>
+            <tr>
+              <td class="p-3 pr-6 text-slate-800">المشتريات الخاضعة للنسبة الأساسية (15%) المستردة</td>
+              <td class="p-3 text-left font-mono font-bold">{{ vatReturn().taxablePurchases.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+              <td class="p-3 text-center font-mono font-bold">15%</td>
+              <td class="p-3 text-left font-mono font-bold text-rose-800">({{ vatReturn().inputVat.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }})</td>
+            </tr>
+
+            <!-- Net VAT -->
+            <tr class="bg-indigo-950 text-white font-black text-sm">
+              <td class="p-4">صافي الضريبة المستحقة السداد للهيئة (Net VAT Payable)</td>
+              <td></td>
+              <td></td>
+              <td class="p-4 text-left font-mono text-base text-emerald-300">
+                {{ vatReturn().netVatPayable.toLocaleString('ar-SA', {minimumFractionDigits: 2}) }} ر.س
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-300 text-xs">
+          <span class="font-bold text-slate-700">المبلغ المستحق للهيئة بالحروف:</span>
+          <span class="font-bold text-indigo-950 mr-2">{{ vatReturn().payableTafqeet }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- 4. Trial Balance View -->
+    @if (selectedReport() === 'trial_balance') {
+      <div class="space-y-6">
+        <div class="text-center pb-2 border-b-2 border-slate-900 bg-slate-100/60 py-2 rounded-lg">
+          <h1 class="text-lg font-black text-slate-900">
+            ميزان المراجعة بالأرصدة والمجاميع (TRIAL BALANCE)
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">حسب دليل الحسابات العام حتى {{ erpService.financialStats().todayDate }}</p>
+        </div>
+
+        <table class="w-full text-xs border-collapse border-2 border-slate-300">
+          <thead>
+            <tr class="bg-slate-100 border-b-2 border-slate-300 font-black text-slate-900 text-right">
+              <th class="p-2.5 border-r border-slate-300 w-24 text-center">رمز الحساب</th>
+              <th class="p-2.5 border-r border-slate-300">اسم الحساب (Account Title)</th>
+              <th class="p-2.5 border-r border-slate-300 text-center w-20">المستوى</th>
+              <th class="p-2.5 border-r border-slate-300 text-left w-32">أرصدة مدينة (Debit)</th>
+              <th class="p-2.5 text-left w-32">أرصدة دائنة (Credit)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            @for (acc of trialBalanceAccounts(); track acc.code) {
+              <tr class="hover:bg-slate-50/50" [class.bg-slate-50]="acc.level <= 2" [class.font-bold]="acc.level <= 2">
+                <td class="p-2.5 border-r border-slate-300 text-center font-mono font-bold">{{ acc.code }}</td>
+                <td class="p-2.5 border-r border-slate-300">{{ acc.nameAr }}</td>
+                <td class="p-2.5 border-r border-slate-300 text-center font-mono text-slate-500">{{ acc.level }}</td>
+                <td class="p-2.5 border-r border-slate-300 text-left font-mono font-semibold">
+                  {{ acc.isDebitNature ? acc.balance.toLocaleString('ar-SA', {minimumFractionDigits: 2}) : '-' }}
+                </td>
+                <td class="p-2.5 text-left font-mono font-semibold">
+                  {{ !acc.isDebitNature ? acc.balance.toLocaleString('ar-SA', {minimumFractionDigits: 2}) : '-' }}
+                </td>
+              </tr>
+            }
+
+            <tr class="bg-slate-900 text-white font-black text-sm">
+              <td colspan="3" class="p-3.5 text-right">إجمالي ميزان المراجعة (توازن تام):</td>
+              <td class="p-3.5 text-left font-mono text-emerald-300">{{ trialBalanceTotalDebit().toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+              <td class="p-3.5 text-left font-mono text-emerald-300">{{ trialBalanceTotalCredit().toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- 5. Inventory Valuation View -->
+    @if (selectedReport() === 'inventory_valuation') {
+      <div class="space-y-6">
+        <div class="text-center pb-2 border-b-2 border-slate-900 bg-slate-100/60 py-2 rounded-lg">
+          <h1 class="text-lg font-black text-slate-900">
+            تقرير تقييم المخزون وتكلفة البضاعة (INVENTORY VALUATION)
+          </h1>
+          <p class="text-xs text-slate-500 font-medium">محسوب وفق طريقة المتوسط المرجح المتحرك (Weighted Moving Average)</p>
+        </div>
+
+        <table class="w-full text-xs border-collapse border-2 border-slate-300">
+          <thead>
+            <tr class="bg-slate-100 border-b-2 border-slate-300 font-black text-slate-900 text-right">
+              <th class="p-2.5 border-r border-slate-300 w-28 text-center">رمز الصنف SKU</th>
+              <th class="p-2.5 border-r border-slate-300">اسم المنتج والمواصفات</th>
+              <th class="p-2.5 border-r border-slate-300 text-center w-20">الرصيد الحرج</th>
+              <th class="p-2.5 border-r border-slate-300 text-center w-24">الكمية المتوفرة</th>
+              <th class="p-2.5 border-r border-slate-300 text-left w-28">متوسط التكلفة</th>
+              <th class="p-2.5 border-r border-slate-300 text-left w-28">سعر البيع</th>
+              <th class="p-2.5 text-left w-36">إجمالي قيمة التقييم</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-200">
+            @for (prod of erpService.products(); track prod.sku) {
+              <tr class="hover:bg-slate-50/50">
+                <td class="p-2.5 border-r border-slate-300 text-center font-mono font-bold">{{ prod.sku }}</td>
+                <td class="p-2.5 border-r border-slate-300 font-bold text-slate-900">{{ prod.nameAr }}</td>
+                <td class="p-2.5 border-r border-slate-300 text-center font-mono text-slate-500">{{ prod.minStockLevel }}</td>
+                <td class="p-2.5 border-r border-slate-300 text-center font-mono font-bold text-indigo-900">{{ prod.currentStock }} {{ prod.unit }}</td>
+                <td class="p-2.5 border-r border-slate-300 text-left font-mono">{{ prod.averageCost.toFixed(2) }}</td>
+                <td class="p-2.5 border-r border-slate-300 text-left font-mono">{{ prod.sellingPrice.toFixed(2) }}</td>
+                <td class="p-2.5 text-left font-mono font-black text-slate-900">{{ (prod.currentStock * prod.averageCost).toLocaleString('ar-SA', {minimumFractionDigits: 2}) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Official Report Footer & Audit Signatures -->
+    <div class="pt-8 border-t-2 border-slate-800 grid grid-cols-3 gap-6 text-center text-xs text-slate-800 mt-10 signature-box">
+      <div>
+        <span class="font-bold block mb-12 text-sm">المحاسب المالي / مُعد التقرير</span>
+        <span class="text-slate-500 text-xs block mb-2 font-medium">إدارة الحسابات العامة</span>
+        <div class="border-b-2 border-slate-400 w-44 mx-auto"></div>
+      </div>
+
+      <div>
+        <span class="font-bold block mb-12 text-sm">المدير المالي التنفيذي (CFO)</span>
+        <span class="text-slate-500 text-xs block mb-2 font-medium">الإدارة المالية والرقابة</span>
+        <div class="border-b-2 border-slate-400 w-44 mx-auto"></div>
+      </div>
+
+      <div>
+        <span class="font-bold block mb-3 text-sm">اعتماد المراجع القانوني والختم</span>
+        <div class="w-16 h-16 border-2 border-dashed border-indigo-900 rounded-full mx-auto flex items-center justify-center text-[10px] text-indigo-900 font-bold">
+          الختم المالي
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Microprint Footer -->
+    <div class="mt-8 pt-3 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+      <span>تقرير مالي رسمي مستخرج من نظام ERP المحاسبي المتكامل — ZATCA Phase 2 Compliant</span>
+      <span>الصفحة 1 من 1</span>
+    </div>
+  </div>
+</div>

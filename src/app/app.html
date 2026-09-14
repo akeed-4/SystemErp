@@ -1,0 +1,420 @@
+<div class="min-h-screen bg-slate-100 flex flex-col font-sans antialiased text-slate-900 selection:bg-indigo-500 selection:text-white" [attr.dir]="i18n.currentDir()">
+  <!-- Top App Navigation Bar (Header) -->
+  <header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md border-b border-slate-800 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <!-- Brand & Mobile Toggle -->
+      <div class="flex items-center gap-3">
+        <button
+          id="btn-mobile-menu-toggle"
+          type="button"
+          (click)="toggleMobileMenu()"
+          class="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-hidden transition-colors"
+          [attr.aria-label]="'header.mobileMenu' | translate"
+        >
+          <span class="material-icons text-2xl">{{ isMobileMenuOpen() ? 'close' : 'menu' }}</span>
+        </button>
+
+        <a routerLink="/dashboard" class="flex items-center gap-2.5 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+            <span class="material-icons text-xl">account_balance</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="font-black text-base tracking-tight text-white group-hover:text-indigo-300 transition-colors">
+                {{ 'common.appName' | translate }}
+              </span>
+              <span class="px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-300 text-[10px] font-mono border border-indigo-400/30">
+                ERP
+              </span>
+            </div>
+            <span class="text-[10px] text-slate-400 block -mt-0.5">
+              {{ 'common.erpSubtitle' | translate }}
+            </span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Center / Multi-Tenant Organization Switcher -->
+      <div class="flex items-center gap-2">
+        <div class="relative flex items-center bg-slate-800/90 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs shadow-inner">
+          <span class="material-icons text-indigo-400 text-base" [class.ml-1.5]="i18n.isArabic()" [class.mr-1.5]="i18n.isEnglish()">domain</span>
+          <span class="text-slate-400 hidden sm:inline text-[11px]" [class.ml-1]="i18n.isArabic()" [class.mr-1]="i18n.isEnglish()">{{ 'header.currentFacility' | translate }}</span>
+          <select
+            id="select-active-tenant"
+            [ngModel]="erpService.activeTenantId()"
+            (ngModelChange)="switchTenant($event)"
+            class="bg-transparent text-white font-bold text-xs focus:outline-hidden cursor-pointer"
+          >
+            <option *ngFor="let t of erpService.tenants()" [value]="t.id" class="bg-slate-900 text-white">
+              {{ i18n.isArabic() ? t.nameAr : t.nameEn }} ({{ t.id }})
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Right Actions: Language Menu Switcher & Quick Shortcuts -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- Professional Language Menu Dropdown -->
+        <div class="relative">
+          <button
+            id="btn-lang-menu-toggle"
+            type="button"
+            (click)="toggleLangMenu()"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700/90 border border-slate-700 text-xs font-semibold text-white transition-all shadow-inner focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+            [attr.aria-expanded]="isLangMenuOpen()"
+            [title]="'header.language' | translate"
+          >
+            <span class="text-sm leading-none">{{ i18n.isArabic() ? '🇸🇦' : '🇬🇧' }}</span>
+            <span class="hidden sm:inline font-bold text-xs">{{ i18n.isArabic() ? 'العربية' : 'English' }}</span>
+            <mat-icon class="text-slate-400 text-sm">arrow_drop_down</mat-icon>
+          </button>
+
+          <!-- Dropdown Backdrop to close on outside click -->
+          <div
+            *ngIf="isLangMenuOpen()"
+            (click)="closeLangMenu()"
+            class="fixed inset-0 z-40"
+          ></div>
+
+          <!-- Dropdown Menu -->
+          <div
+            *ngIf="isLangMenuOpen()"
+            class="absolute z-50 mt-2 w-60 rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl p-2 text-xs space-y-1"
+            [class.right-0]="i18n.isArabic()"
+            [class.left-0]="i18n.isEnglish()"
+          >
+            <div class="px-2.5 py-1.5 text-[10px] font-bold text-slate-400 border-b border-slate-800 flex items-center justify-between">
+              <span>{{ 'header.language' | translate }}</span>
+              <span class="font-mono text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">
+                DIR: {{ i18n.currentDir() | uppercase }}
+              </span>
+            </div>
+
+            <!-- Arabic Choice -->
+            <button
+              type="button"
+              (click)="selectLanguage('ar')"
+              [class.bg-indigo-600]="i18n.isArabic()"
+              [class.text-white]="i18n.isArabic()"
+              [class.text-slate-300]="!i18n.isArabic()"
+              class="w-full text-start flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-800 transition-colors"
+            >
+              <div class="flex items-center gap-2.5">
+                <span class="text-lg">🇸🇦</span>
+                <div>
+                  <div class="font-bold text-xs">العربية (RTL)</div>
+                  <div class="text-[10px] text-slate-400">اللغة الافتراضية للمنظومة</div>
+                </div>
+              </div>
+              <mat-icon *ngIf="i18n.isArabic()" class="text-emerald-400 text-base">check_circle</mat-icon>
+            </button>
+
+            <!-- English Choice -->
+            <button
+              type="button"
+              (click)="selectLanguage('en')"
+              [class.bg-indigo-600]="i18n.isEnglish()"
+              [class.text-white]="i18n.isEnglish()"
+              [class.text-slate-300]="!i18n.isEnglish()"
+              class="w-full text-start flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-800 transition-colors"
+            >
+              <div class="flex items-center gap-2.5">
+                <span class="text-lg">🇬🇧</span>
+                <div>
+                  <div class="font-bold text-xs">English (LTR)</div>
+                  <div class="text-[10px] text-slate-400">International ERP Standard</div>
+                </div>
+              </div>
+              <mat-icon *ngIf="i18n.isEnglish()" class="text-emerald-400 text-base">check_circle</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Subscription Badge -->
+        <a
+          routerLink="/subscriptions"
+          class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-bold transition-colors"
+          [title]="i18n.isArabic() ? 'إدارة باقات واشتراك المنشأة' : 'Company Subscriptions'"
+        >
+          <mat-icon class="text-amber-400 text-sm">stars</mat-icon>
+          <span class="hidden md:inline">{{ authService.activePlan().nameAr.split('(')[0] }}</span>
+          <span class="px-1 py-0.2 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+            {{ authService.currentSubscription()?.status === 'active' ? (i18n.isArabic() ? 'نشط' : 'Active') : 'تجريبي' }}
+          </span>
+        </a>
+
+        <!-- User Account / Auth Dropdown -->
+        @if (authService.currentUser(); as user) {
+          <div class="relative">
+            <button
+              type="button"
+              (click)="toggleUserMenu()"
+              class="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700/90 border border-slate-700 text-xs text-white transition-all cursor-pointer"
+              [attr.aria-expanded]="isUserMenuOpen()"
+            >
+              <div class="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white uppercase">
+                {{ user.name.slice(0, 2) }}
+              </div>
+              <div class="hidden sm:block text-start leading-tight">
+                <div class="font-bold text-xs max-w-[90px] truncate">{{ user.name }}</div>
+                <div class="text-[9px] text-slate-400 font-mono">{{ user.role }}</div>
+              </div>
+              <mat-icon class="text-slate-400 text-sm hidden sm:inline">arrow_drop_down</mat-icon>
+            </button>
+
+            <!-- Backdrop -->
+            <div *ngIf="isUserMenuOpen()" (click)="closeUserMenu()" class="fixed inset-0 z-40"></div>
+
+            <!-- User Dropdown Menu -->
+            <div
+              *ngIf="isUserMenuOpen()"
+              class="absolute z-50 mt-2 w-56 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2 text-xs space-y-1"
+              [class.right-0]="i18n.isArabic()"
+              [class.left-0]="i18n.isEnglish()"
+            >
+              <div class="p-2 border-b border-slate-800">
+                <div class="font-bold text-white">{{ user.name }}</div>
+                <div class="text-[10px] text-slate-400 font-mono truncate">{{ user.email }}</div>
+              </div>
+
+              <a
+                routerLink="/subscriptions"
+                (click)="closeUserMenu()"
+                class="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <mat-icon class="text-indigo-400 text-sm">card_membership</mat-icon>
+                <span>{{ i18n.isArabic() ? 'إدارة الاشتراك والباقات' : 'Manage Subscription' }}</span>
+              </a>
+
+              <a
+                *ngIf="!authService.currentUser()"
+                routerLink="/register"
+                (click)="closeUserMenu()"
+                class="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <mat-icon class="text-emerald-400 text-sm">add_business</mat-icon>
+                <span>{{ i18n.isArabic() ? 'تسجيل منشأة جديدة' : 'Register New Company' }}</span>
+              </a>
+
+              <div class="border-t border-slate-800 my-1"></div>
+
+              <button
+                type="button"
+                (click)="logout()"
+                class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 transition-colors text-start cursor-pointer"
+              >
+                <mat-icon class="text-rose-400 text-sm">logout</mat-icon>
+                <span>{{ i18n.isArabic() ? 'تسجيل الخروج' : 'Logout' }}</span>
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="flex items-center gap-1.5">
+            <a
+              routerLink="/login"
+              class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white transition-colors"
+            >
+              {{ i18n.isArabic() ? 'تسجيل الدخول' : 'Sign In' }}
+            </a>
+            <a
+              routerLink="/register"
+              class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow-xs transition-colors"
+            >
+              {{ i18n.isArabic() ? 'تسجيل منشأة' : 'Register' }}
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <!-- App Body Layout (Sidebar + Main View) -->
+  <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 flex gap-6">
+    <!-- Desktop Persistent Sidebar -->
+    <aside class="hidden lg:block w-64 shrink-0 no-print">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-3 sticky top-24 space-y-1">
+        <!-- Tenant Summary Card -->
+        <div class="p-3 mb-2 rounded-xl bg-slate-50 border border-slate-200/80">
+          <div class="text-[11px] text-slate-500 font-medium">{{ 'header.currentFacility' | translate }}</div>
+          <div class="text-xs font-bold text-slate-900 truncate mt-0.5">
+            {{ i18n.isArabic() ? erpService.activeTenant().nameAr : erpService.activeTenant().nameEn }}
+          </div>
+          <div class="text-[10px] text-slate-500 font-mono mt-0.5">
+            {{ 'header.vatNumber' | translate }}: {{ erpService.activeTenant().vatNumber }}
+          </div>
+        </div>
+
+        <!-- Register New Company Shortcut (Only when NOT logged in) -->
+        @if (!authService.currentUser()) {
+          <a
+            routerLink="/register"
+            class="flex items-center justify-between p-2.5 mb-2 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-950 transition-colors"
+          >
+            <div class="flex items-center gap-2">
+              <mat-icon class="text-indigo-600 text-sm">add_business</mat-icon>
+              <span class="text-xs font-bold">{{ i18n.isArabic() ? 'تسجيل منشأة وباقة جديدة' : 'Register New Company' }}</span>
+            </div>
+            <mat-icon class="text-indigo-400 text-sm">arrow_forward</mat-icon>
+          </a>
+        }
+
+        <!-- Hierarchical Navigation Menu -->
+        <nav class="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
+          @for (group of navGroups(); track group.id) {
+            <div class="border border-slate-200/70 rounded-xl overflow-hidden bg-slate-50/50">
+              <!-- Parent Group Header -->
+              <button
+                type="button"
+                (click)="toggleGroup(group.id)"
+                class="w-full flex items-center justify-between p-2.5 bg-slate-100/80 hover:bg-slate-200/70 text-slate-800 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="material-icons text-indigo-600 text-base">{{ group.icon }}</span>
+                  <span>{{ i18n.isArabic() ? group.labelAr : group.labelEn }}</span>
+                </div>
+                <span class="material-icons text-slate-400 text-sm transition-transform duration-200" [class.rotate-180]="group.expanded">
+                  expand_more
+                </span>
+              </button>
+
+              <!-- Child Screens Submenu -->
+              @if (group.expanded) {
+                <div class="p-1 space-y-0.5 bg-white">
+                  @for (child of group.children; track child.path) {
+                    <a
+                      [routerLink]="child.path"
+                      routerLinkActive="bg-indigo-600 text-white font-bold shadow-xs"
+                      [routerLinkActiveOptions]="{exact: true}"
+                      class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
+                    >
+                      <span class="material-icons text-base opacity-75">{{ child.icon }}</span>
+                      <span class="truncate">{{ i18n.isArabic() ? child.labelAr : child.labelEn }}</span>
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </nav>
+
+        <!-- System Architecture Footnote -->
+        <div class="pt-3 border-t border-slate-100 mt-2 text-[10px] text-slate-400 text-center">
+          {{ 'header.systemFootnote' | translate }}
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile Drawer Sidebar (Backdrop & Drawer) -->
+    <div
+      *ngIf="isMobileMenuOpen()"
+      class="fixed inset-0 z-40 lg:hidden flex no-print"
+      role="dialog"
+      aria-modal="true"
+    >
+      <!-- Backdrop overlay -->
+      <div
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+        (click)="closeMobileMenu()"
+      ></div>
+
+      <!-- Drawer Content -->
+      <div class="relative w-72 max-w-full bg-white h-full shadow-2xl flex flex-col p-4 z-50 overflow-y-auto"
+           [class.mr-auto]="i18n.isArabic()"
+           [class.ml-auto]="i18n.isEnglish()">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
+          <span class="font-black text-sm text-slate-900">{{ 'header.mobileMenu' | translate }}</span>
+          <button
+            (click)="closeMobileMenu()"
+            class="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+          >
+            <span class="material-icons text-xl">close</span>
+          </button>
+        </div>
+
+        <nav class="space-y-3 flex-1">
+          @for (group of navGroups(); track group.id) {
+            <div class="space-y-1">
+              <div class="px-2 py-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 rounded-lg">
+                {{ i18n.isArabic() ? group.labelAr : group.labelEn }}
+              </div>
+              @for (child of group.children; track child.path) {
+                <a
+                  [routerLink]="child.path"
+                  (click)="closeMobileMenu()"
+                  routerLinkActive="bg-indigo-600 text-white font-bold"
+                  [routerLinkActiveOptions]="{exact: true}"
+                  class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-100 ml-2"
+                >
+                  <span class="material-icons text-base">{{ child.icon }}</span>
+                  <span>{{ i18n.isArabic() ? child.labelAr : child.labelEn }}</span>
+                </a>
+              }
+            </div>
+          }
+        </nav>
+      </div>
+    </div>
+
+    <!-- Main Content Dynamic View Outlet -->
+    <main class="flex-1 min-w-0 pb-16 lg:pb-0">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Quick Navigation Bar -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-20 bg-white border-t border-slate-200 shadow-lg px-2 py-1.5 flex items-center justify-around text-[10px] text-slate-600 no-print">
+    <a
+      routerLink="/dashboard"
+      routerLinkActive="text-indigo-600 font-bold"
+      class="flex flex-col items-center p-1"
+    >
+      <span class="material-icons text-lg">dashboard</span>
+      <span>{{ 'nav.dashboard' | translate }}</span>
+    </a>
+
+    <a
+      routerLink="/sales"
+      routerLinkActive="text-indigo-600 font-bold"
+      class="flex flex-col items-center p-1"
+    >
+      <span class="material-icons text-lg">point_of_sale</span>
+      <span>{{ 'nav.sales' | translate }}</span>
+    </a>
+
+    <a
+      routerLink="/purchases"
+      routerLinkActive="text-indigo-600 font-bold"
+      class="flex flex-col items-center p-1"
+    >
+      <span class="material-icons text-lg">shopping_cart</span>
+      <span>{{ 'nav.purchases' | translate }}</span>
+    </a>
+
+    <a
+      routerLink="/costing"
+      routerLinkActive="text-indigo-600 font-bold"
+      class="flex flex-col items-center p-1"
+    >
+      <span class="material-icons text-lg">calculate</span>
+      <span>{{ 'nav.costing' | translate }}</span>
+    </a>
+
+    <a
+      routerLink="/vouchers"
+      routerLinkActive="text-indigo-600 font-bold"
+      class="flex flex-col items-center p-1"
+    >
+      <span class="material-icons text-lg">receipt_long</span>
+      <span>{{ 'nav.vouchers' | translate }}</span>
+    </a>
+
+    <a
+      routerLink="/accounts"
+      routerLinkActive="text-indigo-600 font-bold"
+      class="flex flex-col items-center p-1"
+    >
+      <span class="material-icons text-lg">account_tree</span>
+      <span>{{ 'nav.accounts' | translate }}</span>
+    </a>
+  </nav>
+</div>

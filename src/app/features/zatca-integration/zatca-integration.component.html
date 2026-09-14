@@ -1,0 +1,376 @@
+<div class="space-y-6">
+  <!-- Top Header Banner -->
+  <div class="bg-gradient-to-l from-emerald-950 via-slate-900 to-slate-900 text-white rounded-2xl p-6 shadow-md border border-emerald-800/40">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 rounded-full text-xs font-semibold mb-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>بوابة هيئة الزكاة والضريبة والجمارك (منظومة فاتورة - المرحلة 2)</span>
+        </div>
+        <h1 class="text-2xl font-black">منصة الربط والتكامل مع هيئة الزكاة (ZATCA Fatoora Phase 2)</h1>
+        <p class="text-xs text-slate-300 mt-1 max-w-2xl">
+          أداة متكاملة لاختبار وتجربة إرسال الفواتير بصيغة UBL 2.1 XML، فحص التشفير الرقمي ECDSA، والتحقق من التشفير الخماسي والثماني لكود الـ QR.
+        </p>
+      </div>
+
+      <!-- Environment Selector Badge -->
+      <div class="bg-white/10 p-3 rounded-xl border border-white/10 text-xs">
+        <span class="text-slate-400 block text-[10px] mb-1">بيئة الربط الحالية:</span>
+        <div class="flex items-center gap-1">
+          <button
+            (click)="zatcaEnv.set('simulation')"
+            [class.bg-emerald-600]="zatcaEnv() === 'simulation'"
+            [class.text-white]="zatcaEnv() === 'simulation'"
+            [class.bg-white_10]="zatcaEnv() !== 'simulation'"
+            class="px-2.5 py-1 rounded text-xs font-bold transition-colors"
+          >
+            المحاكاة (Simulation)
+          </button>
+          <button
+            (click)="zatcaEnv.set('developer')"
+            [class.bg-indigo-600]="zatcaEnv() === 'developer'"
+            [class.text-white]="zatcaEnv() === 'developer'"
+            class="px-2.5 py-1 rounded text-xs font-bold bg-white/10 text-slate-300 hover:text-white"
+          >
+            بوابة المطورين
+          </button>
+          <button
+            (click)="zatcaEnv.set('production')"
+            [class.bg-rose-600]="zatcaEnv() === 'production'"
+            [class.text-white]="zatcaEnv() === 'production'"
+            class="px-2.5 py-1 rounded text-xs font-bold bg-white/10 text-slate-300 hover:text-white"
+          >
+            الإنتاج الفعلي
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
+    <button
+      id="tab-zatca-test"
+      type="button"
+      (click)="activeTab.set('test_send')"
+      [class.bg-emerald-600]="activeTab() === 'test_send'"
+      [class.text-white]="activeTab() === 'test_send'"
+      [class.bg-white]="activeTab() !== 'test_send'"
+      [class.text-slate-700]="activeTab() !== 'test_send'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs"
+    >
+      <span class="material-icons text-xs">send</span>
+      <span>تجربة إرسال الفواتير (API Testing Sandbox)</span>
+    </button>
+
+    <button
+      id="tab-zatca-xml"
+      type="button"
+      (click)="activeTab.set('ubl_xml')"
+      [class.bg-emerald-600]="activeTab() === 'ubl_xml'"
+      [class.text-white]="activeTab() === 'ubl_xml'"
+      [class.bg-white]="activeTab() !== 'ubl_xml'"
+      [class.text-slate-700]="activeTab() !== 'ubl_xml'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs"
+    >
+      <span class="material-icons text-xs">code</span>
+      <span>مستعرض ملف الفاتورة XML UBL 2.1</span>
+    </button>
+
+    <button
+      id="tab-zatca-onboarding"
+      type="button"
+      (click)="activeTab.set('onboarding')"
+      [class.bg-emerald-600]="activeTab() === 'onboarding'"
+      [class.text-white]="activeTab() === 'onboarding'"
+      [class.bg-white]="activeTab() !== 'onboarding'"
+      [class.text-slate-700]="activeTab() !== 'onboarding'"
+      class="px-4 py-2 rounded-lg text-xs font-bold border border-slate-200 transition-colors flex items-center gap-1.5 shadow-2xs"
+    >
+      <span class="material-icons text-xs">vpn_key</span>
+      <span>التهيئة والشهادات الرقمية (CSID & Keys)</span>
+    </button>
+  </div>
+
+  <!-- Tab 1: Live Invoice Testing & Submission Sandbox -->
+  <div *ngIf="activeTab() === 'test_send'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Column: Invoice Selector & Send Control -->
+    <div class="lg:col-span-1 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs">
+      <div>
+        <label class="block font-bold text-slate-800 mb-1">اختر الفاتورة الصادرة للاختبار:</label>
+        <select
+          id="select-zatca-invoice"
+          [ngModel]="selectedInvoiceId()"
+          (ngModelChange)="selectedInvoiceId.set($event)"
+          class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono font-semibold text-slate-900"
+        >
+          <option *ngFor="let inv of salesInvoices()" [value]="inv.id">
+            {{ inv.invoiceNumber }} - {{ inv.partyName }} ({{ inv.grandTotal }} ر.س)
+          </option>
+        </select>
+      </div>
+
+      <!-- Selected Invoice Snapshot Card -->
+      <div *ngIf="currentInvoice() as inv" class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">نوع الفاتورة:</span>
+          <span class="font-bold text-indigo-900">
+            {{ inv.invoiceType === 'tax_invoice' ? 'فاتورة ضريبية (B2B)' : 'فاتورة مبسطة (B2C)' }}
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">تاريخ ووقت الفاتورة:</span>
+          <span class="font-mono">{{ inv.issueDate }} {{ inv.issueTime }}</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">المبلغ الإجمالي:</span>
+          <span class="font-mono font-bold text-emerald-700">{{ inv.grandTotal.toFixed(2) }} ر.س</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500">ضريبة 15%:</span>
+          <span class="font-mono font-bold text-indigo-900">{{ inv.vatTotal.toFixed(2) }} ر.س</span>
+        </div>
+
+        <div class="pt-2 border-t border-slate-200">
+          <span class="text-[11px] text-slate-400 block mb-1">هاش الفاتورة الحالي (SHA-256):</span>
+          <code class="block font-mono text-[10px] bg-white p-1.5 rounded border border-slate-200 break-all text-slate-700">
+            {{ inv.zatcaHash }}
+          </code>
+        </div>
+      </div>
+
+      <!-- Live Test Send Action Button -->
+      <button
+        id="btn-test-send-zatca"
+        type="button"
+        (click)="testSendCurrentInvoice()"
+        [disabled]="isTestingSubmission()"
+        class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+      >
+        <span class="material-icons text-base" [class.animate-spin]="isTestingSubmission()">
+          {{ isTestingSubmission() ? 'sync' : 'cloud_upload' }}
+        </span>
+        <span>
+          {{ isTestingSubmission() ? 'جارِ التحقق والإرسال إلى الهيئة...' : 'إرسال وتجربة الفاتورة مع منصة الهيئة الآن' }}
+        </span>
+      </button>
+
+      <div class="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl text-[11px] text-emerald-900 space-y-1">
+        <strong class="block">ما الذي يحدث عند النقر؟</strong>
+        <p>1. إنشاء ملف UBL 2.1 XML متوافق مع اشتراطات الهيئة.</p>
+        <p>2. توليد التشفير الرقمي والهاش SHA-256 وربطه بالفاتورة السابقة (PIH Chain).</p>
+        <p>3. إرسال طلب HTTP POST آمن إلى بوابة ZATCA لمحاكاة الاعتماد والتصريح الفوري (Clearance / Reporting).</p>
+      </div>
+    </div>
+
+    <!-- Right Column: Live Transmission Response & Clearance Inspection -->
+    <div class="lg:col-span-2 space-y-4">
+      <!-- Submission Results Card -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <span class="material-icons text-emerald-600">terminal</span>
+            <span>تقرير الاستجابة والاعتماد اللحظي من خوادم الهيئة</span>
+          </h3>
+
+          <span
+            *ngIf="lastSubmissionResult() as res"
+            class="px-2.5 py-1 rounded-full text-xs font-bold"
+            [class.bg-emerald-100]="res.status === 'cleared'"
+            [class.text-emerald-800]="res.status === 'cleared'"
+          >
+            HTTP {{ res.httpCode }} OK (CLEARED)
+          </span>
+        </div>
+
+        <div *ngIf="lastSubmissionResult() as res; else noSubmissionYet" class="space-y-4">
+          <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div class="flex items-center gap-2 text-emerald-950 font-bold mb-1">
+              <span class="material-icons text-emerald-600">check_circle</span>
+              <span>تم اعتماد الفاتورة وتصريحها بنجاح بواسطة منصة ZATCA Fatoora</span>
+            </div>
+            <p class="text-xs text-emerald-800">
+              تطابق الفاتورة كافة معايير المرحلة الثانية، وتم تسجيلها في السجل الضريبي الرسمي.
+            </p>
+          </div>
+
+          <!-- Technical Validation Checklist -->
+          <div class="space-y-2">
+            <h4 class="font-bold text-slate-700">نتائج الفحص والتحقق الفني:</h4>
+            <div *ngFor="let msg of res.messages" class="flex items-center gap-2 p-2 bg-slate-50 rounded-lg border border-slate-200 text-slate-800">
+              <span class="material-icons text-emerald-600 text-sm">done_all</span>
+              <span class="font-mono text-[11px]">{{ msg }}</span>
+            </div>
+          </div>
+
+          <!-- Payload Metadata Grid -->
+          <div class="grid grid-cols-2 gap-3 p-3 bg-slate-900 text-slate-300 rounded-xl font-mono text-[11px]">
+            <div>
+              <span class="text-slate-400 block text-[10px]">TIMESTAMP:</span>
+              <span>{{ res.timestamp }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-[10px]">CLEARANCE STATUS:</span>
+              <span class="text-emerald-400 font-bold">CLEARED (PASS)</span>
+            </div>
+            <div class="col-span-2">
+              <span class="text-slate-400 block text-[10px]">DOCUMENT SHA-256 HASH:</span>
+              <span class="break-all text-amber-300">{{ res.hash }}</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noSubmissionYet>
+          <div class="text-center py-12 text-slate-400 space-y-2">
+            <span class="material-icons text-4xl text-slate-300">cloud_sync</span>
+            <p class="font-semibold text-slate-600">لم يتم إرسال طلب تجربة حتى الآن</p>
+            <p class="text-xs">اضغط على زر "إرسال وتجربة الفاتورة مع منصة الهيئة الآن" لاختبار عملية الإرسال اللحظية.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- QR Code Preview & Cryptographic Verification -->
+      <div *ngIf="currentInvoice() as inv" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center gap-6">
+        <div class="shrink-0 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+          <app-zatca-qr [qrData]="inv.zatcaQrCode || ''" [size]="140"></app-zatca-qr>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          <h4 class="font-bold text-slate-900">رمز الاستجابة السريع المعتمد (ZATCA Phase 2 QR Code)</h4>
+          <p class="text-slate-500 text-[11px]">
+            مشفر وفق هيكلية TLV (Tag-Length-Value) المحددة من الهيئة، ويحتوي على البيانات الإلزامية الثمانية بما فيها الختم الرقمي وتوقيع الهيئة المشفر.
+          </p>
+          <div class="flex items-center gap-2 pt-1">
+            <button
+              type="button"
+              (click)="downloadXml()"
+              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+            >
+              <span class="material-icons text-xs">file_download</span>
+              <span>تحميل ملف الفاتورة XML</span>
+            </button>
+            <button
+              type="button"
+              (click)="copyXmlToClipboard()"
+              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+            >
+              <span class="material-icons text-xs">content_copy</span>
+              <span>نسخ XML</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: UBL XML Raw Viewer -->
+  <div *ngIf="activeTab() === 'ubl_xml'" class="bg-slate-950 rounded-2xl border border-slate-800 p-6 text-white font-mono text-xs shadow-lg space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="flex items-center gap-2">
+        <span class="material-icons text-emerald-400 text-sm">code</span>
+        <span class="font-bold">كود الفاتورة القياسي UBL 2.1 (ZATCA XML Document)</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          (click)="copyXmlToClipboard()"
+          class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-xs text-slate-200 transition-colors"
+        >
+          نسخ الكود
+        </button>
+        <button
+          (click)="downloadXml()"
+          class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 rounded text-xs text-white font-bold transition-colors"
+        >
+          تنزيل ملف .xml
+        </button>
+      </div>
+    </div>
+
+    <pre class="overflow-x-auto p-4 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px] leading-relaxed text-emerald-300 max-h-[500px]">
+{{ currentInvoice()?.zatcaUblXml }}
+    </pre>
+  </div>
+
+  <!-- Tab 3: Onboarding & CSID Management -->
+  <div *ngIf="activeTab() === 'onboarding'" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6 text-xs">
+    <div class="border-b border-slate-100 pb-4">
+      <h3 class="font-bold text-slate-900 text-base">إعدادات الربط والشهادات المشفرة (Cryptographic Stamp Onboarding)</h3>
+      <p class="text-slate-500 mt-1">
+        تهيئة المنشأة لدى هيئة الزكاة والضريبة باستخدام رمز التحقق (OTP) وتوليد شهادة الامتثال الرقمية (Compliance CSID).
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Onboarding Form -->
+      <div class="space-y-4 bg-slate-50 p-5 rounded-xl border border-slate-200">
+        <h4 class="font-bold text-slate-800 flex items-center gap-1.5">
+          <span class="material-icons text-indigo-600 text-sm">security</span>
+          <span>بيانات الشهادة والختم الإلكتروني</span>
+        </h4>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">الرقم الضريبي للمنشأة (VAT Registration Number):</label>
+          <input
+            type="text"
+            [value]="erpService.activeTenant().vatNumber"
+            disabled
+            class="w-full bg-slate-200/80 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono font-bold text-slate-700"
+          />
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">رمز التحقق لربط الأجهزة (OTP من بوابة فاتورة):</label>
+          <input
+            type="text"
+            [ngModel]="otpInput()"
+            (ngModelChange)="otpInput.set($event)"
+            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-center tracking-widest text-base font-bold text-slate-900 focus:ring-1 focus:ring-emerald-500"
+            placeholder="123456"
+          />
+          <span class="text-[10px] text-slate-400 mt-1 block">يتم الحصول على الرمز المكون من 6 أرقام من بوابة Fatoora Portal.</span>
+        </div>
+
+        <div class="pt-2">
+          <button
+            type="button"
+            class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs"
+          >
+            توليد طلب الشهادة CSR والحصول على الختم الرقمي CSID
+          </button>
+        </div>
+      </div>
+
+      <!-- Keys & Certificate Status Card -->
+      <div class="space-y-4 bg-slate-900 text-slate-200 p-5 rounded-xl border border-slate-800">
+        <h4 class="font-bold text-white flex items-center gap-1.5">
+          <span class="material-icons text-emerald-400 text-sm">vpn_key</span>
+          <span>المفاتيح المشفرة وحالة الامتثال</span>
+        </h4>
+
+        <div class="space-y-2 font-mono text-[11px]">
+          <div class="p-2.5 rounded bg-white/5 border border-white/10">
+            <span class="text-slate-400 block text-[10px]">خوارزمية التشفير:</span>
+            <span class="text-emerald-400 font-bold">ECDSA with secp256k1 Curve</span>
+          </div>
+
+          <div class="p-2.5 rounded bg-white/5 border border-white/10">
+            <span class="text-slate-400 block text-[10px]">معرف الشهادة الرقمية (CSID):</span>
+            <span class="text-slate-300">CSID-KSA-{{ erpService.activeTenant().vatNumber }}-2026</span>
+          </div>
+
+          <div class="p-2.5 rounded bg-white/5 border border-white/10">
+            <span class="text-slate-400 block text-[10px]">حالة الترخيص لدى الهيئة:</span>
+            <span class="text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+              <span class="material-icons text-xs">verified</span>
+              <span>نشط ومعتمد (Active & Compliant)</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

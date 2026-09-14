@@ -1,0 +1,143 @@
+/* Global Styles for ERP Enterprise System */
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Cairo', 'Tajawal', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* DevExtreme-like DataGrid custom styling */
+.dx-datagrid-header {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.dx-row-hover:hover {
+  background-color: #f8fafc;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* =========================================================
+   COMPREHENSIVE PRINT CSS FOR INVOICES, VOUCHERS & REPORTS
+   ========================================================= */
+@page {
+  size: A4 portrait;
+  margin: 12mm 14mm 14mm 14mm;
+}
+
+@media print {
+  /* Hide all non-printable UI elements */
+  body, html {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .printable-area,
+  .printable-area * {
+    visibility: visible !important;
+  }
+
+  app-invoice-print,
+  app-voucher-print,
+  .fixed,
+  .inset-0 {
+    position: static !important;
+    background: transparent !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+  }
+
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    display: block !important;
+  }
+
+  .no-print,
+  button,
+  .btn,
+  nav,
+  aside,
+  header:not(.print-header),
+  footer:not(.print-footer) {
+    display: none !important;
+  }
+
+  /* Tables & Rows Print Optimization */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* Prevent awkward page breaks in summary cards and signatures */
+  .print-avoid-break,
+  .signature-box,
+  .tax-summary-box {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Crisp borders and typography */
+  .print-border {
+    border-color: #334155 !important;
+  }
+
+  .print-bg-slate {
+    background-color: #f1f5f9 !important;
+  }
+
+  .print-badge {
+    border: 1px solid #94a3b8 !important;
+  }
+}

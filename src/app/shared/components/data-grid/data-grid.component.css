@@ -1,0 +1,13 @@
+/* DevExtreme Inspired Styling for ERP DataGrid */
+:host {
+  display: block;
+  width: 100%;
+}
+
+.dx-datagrid-header {
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+}
+
+.dx-row-hover:hover {
+  background-color: #f8fafc;
+}
